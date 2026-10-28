@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#161826">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cantito">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Cantito</title>
+<link rel="stylesheet" href="ds/styles.css">
+<script src="ds/ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<script src="cantito-config.js"></script>
+<script src="cantito-web-data.js"></script>
+<script src="cantito-canciones.js"></script>
+<script src="cantito-backend.js"></script>
+<style>body{margin:0;background:var(--color-bg)}a{color:var(--color-accent-300)}a:hover{color:var(--color-accent-200)}*::-webkit-scrollbar{display:none}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;justify-content:center;background:radial-gradient(120% 60% at 30% 0%, var(--color-accent-900) 0%, var(--color-bg) 55%);font-family:var(--font-body);color:var(--color-text)">
+  <div style="width:100%;max-width:520px;min-height:100vh;position:relative;background:var(--color-bg);box-shadow:0 0 0 1px var(--color-neutral-900);padding-bottom:170px;box-sizing:border-box">
+
+    <sc-if value="{{ isLocal }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:8px 20px;font-size:12px;color:var(--color-neutral-400);background:var(--color-surface);display:flex;gap:8px;align-items:center"><i class="ph ph-flask" style="color:var(--color-accent-300)"></i>Modo de prueba: los datos se guardan solo en este dispositivo.</div>
+    </sc-if>
+
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ true }}">
+      <div style="min-height:70vh;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--color-accent-300)"><i class="ph ph-music-notes-simple" style="font-size:24px"></i><span style="font-size:15px;font-weight:500">Cantito</span></div>
+    </sc-if>
+
+    <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height:80vh;padding:80px 24px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:32px;box-sizing:border-box">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:8px;color:var(--color-accent-300)"><i class="ph ph-music-notes-simple" style="font-size:24px"></i><span style="font-size:16px;font-weight:500;letter-spacing:.02em">Cantito</span></div>
+          <h1 style="font-size:36px;margin:0;text-wrap:pretty">Canciones que ayudan a hablar</h1>
+          <p style="margin:0;color:var(--color-neutral-400);font-size:15px;text-wrap:pretty">Canciones infantiles elegidas según la edad de tu hijo, lo que quieres estimular y el momento del día. Basado en el taller «Construyendo la comunicación».</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-primary btn-block" onClick="{{ goSignup }}" style="height:52px;font-size:16px">Crear cuenta</button>
+          <button class="btn btn-ghost btn-block" onClick="{{ goLogin }}" style="height:52px;font-size:15px">Ya tengo cuenta</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:22px">
+        <button onClick="{{ goWelcome }}" aria-label="Volver" style="width:44px;height:44px;margin-left:-10px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:22px"></i></button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;color:var(--color-accent-300)">Paso 1 de 3</span>
+          <h2 style="font-size:28px;margin:0">Crea tu cuenta</h2>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-400)">Solo tu nombre, sin apellidos.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Tu nombre</label>
+          <input class="input" value="{{ su.parent }}" onChange="{{ onSuParent }}" placeholder="ej. Ana" autocomplete="given-name" style="height:48px;font-size:16px">
+          <span style="font-size:12px;color:var(--color-accent-300)">{{ err.parent }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Correo electrónico</label>
+          <input class="input" type="email" value="{{ su.email }}" onChange="{{ onSuEmail }}" placeholder="tu@correo.com" autocomplete="email" style="height:48px;font-size:16px">
+          <span style="font-size:12px;color:var(--color-accent-300)">{{ err.email }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Contraseña</label>
+          <input class="input" type="password" value="{{ su.pass }}" onChange="{{ onSuPass }}" placeholder="Mínimo 8 caracteres" autocomplete="new-password" style="height:48px;font-size:16px">
+          <span style="font-size:12px;color:var(--color-accent-300)">{{ err.pass }}</span>
+        </div>
+        <button class="btn btn-primary btn-block" onClick="{{ signupNext }}" style="height:52px;font-size:16px">Continuar</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isConsent }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:22px">
+        <button onClick="{{ goSignup }}" aria-label="Volver" style="width:44px;height:44px;margin-left:-10px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:22px"></i></button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;color:var(--color-accent-300)">Paso 2 de 3</span>
+          <h2 style="font-size:28px;margin:0">Tus datos</h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm);font-size:14px">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Guardamos</span>
+          <div style="display:flex;gap:10px;align-items:center"><i class="ph ph-check" style="color:var(--color-accent-300)"></i>Tu nombre y tu correo</div>
+          <div style="display:flex;gap:10px;align-items:center"><i class="ph ph-check" style="color:var(--color-accent-300)"></i>Nombre y rango de edad de cada hijo</div>
+          <div style="display:flex;gap:10px;align-items:center"><i class="ph ph-check" style="color:var(--color-accent-300)"></i>Tus respuestas a dos cuestionarios cortos</div>
+          <div style="display:flex;gap:10px;align-items:center"><i class="ph ph-check" style="color:var(--color-accent-300)"></i>Qué canciones usan y cuánto tiempo</div>
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500);margin-top:6px">No pedimos</span>
+          <div style="display:flex;gap:10px;align-items:center;color:var(--color-neutral-400)"><i class="ph ph-x"></i>Apellidos, fecha de nacimiento, fotos ni ubicación</div>
+        </div>
+        <button onClick="{{ togglePriv }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45">
+          <i class="{{ privIcon }}" style="font-size:24px;color:var(--color-accent-300);flex:none"></i>
+          <span>Acepto la política de privacidad y el tratamiento de estos datos. <span style="color:var(--color-neutral-500)">(Obligatorio)</span></span>
+        </button>
+        <button onClick="{{ toggleUsage }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45">
+          <i class="{{ usageIcon }}" style="font-size:24px;color:var(--color-accent-300);flex:none"></i>
+          <span>Compartir estadísticas de uso para mejorar el cancionero. <span style="color:var(--color-neutral-500)">(Opcional)</span></span>
+        </button>
+        <button onClick="{{ openPrivacy }}" style="background:none;border:0;padding:6px 0;color:var(--color-accent-300);font:500 14px var(--font-body);cursor:pointer;text-align:left">Leer la política de privacidad</button>
+        <span style="font-size:12px;color:var(--color-accent-300)">{{ err.consent }}</span>
+        <button class="btn btn-primary btn-block" onClick="{{ consentNext }}" style="height:52px;font-size:16px">Aceptar y continuar</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isChild }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+        <button onClick="{{ childBack }}" aria-label="Volver" style="width:44px;height:44px;margin-left:-10px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:22px"></i></button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;color:var(--color-accent-300)">{{ childStep }}</span>
+          <h2 style="font-size:28px;margin:0">¿Para quién es?</h2>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-400)">Puedes agregar varios hijos.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ kidsList }}" as="k" hint-placeholder-count="0">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+              <span style="width:36px;height:36px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:var(--color-accent-900);border:1px solid var(--color-accent-700);color:var(--color-accent-200);font-size:14px">{{ k.initial }}</span>
+              <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:500">{{ k.name }}</span><span style="font-size:12px;color:var(--color-neutral-500)">{{ k.age }}</span></div>
+              <button onClick="{{ k.onRemove }}" aria-label="Quitar" style="width:44px;height:44px;background:none;border:0;color:var(--color-neutral-500);cursor:pointer"><i class="ph ph-x" style="font-size:18px"></i></button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Nombre del niño o niña</label>
+          <input class="input" value="{{ draft.name }}" onChange="{{ onDraftName }}" placeholder="Solo el nombre" style="height:48px;font-size:16px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Edad</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <sc-for list="{{ draftAges }}" as="a" hint-placeholder-count="5">
+              <button onClick="{{ a.onClick }}" style="height:48px;border-radius:var(--radius-md);background:{{ a.bg }};border:1px solid {{ a.bd }};color:{{ a.fg }};font:500 14px var(--font-body);cursor:pointer">{{ a.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <span style="font-size:12px;color:var(--color-accent-300)">{{ err.child }}</span>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-secondary btn-block" onClick="{{ addKid }}" style="height:48px"><i class="ph ph-plus"></i>Agregar otro hijo</button>
+          <button class="btn btn-primary btn-block" onClick="{{ childNext }}" style="height:52px;font-size:16px;opacity:{{ busyOpacity }}">{{ childCta }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSurvey }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:20px">
+          <span style="font-size:12px;color:var(--color-accent-300)">{{ svKicker }}</span>
+          <h2 style="font-size:28px;margin:0">{{ svTitle }}</h2>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-400);text-wrap:pretty">{{ svIntro }}</p>
+        </div>
+        <sc-for list="{{ surveyQs }}" as="q" hint-placeholder-count="5">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:15px;font-weight:500;line-height:1.35;text-wrap:pretty">{{ q.q }}</span>
+            <sc-if value="{{ q.isChoice }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="4">
+                  <button onClick="{{ o.onClick }}" style="min-height:44px;padding:0 14px;text-align:left;border-radius:var(--radius-md);background:{{ o.bg }};border:1px solid {{ o.bd }};color:{{ o.fg }};font:500 14px var(--font-body);cursor:pointer">{{ o.label }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ q.isScale }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+                <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="5">
+                  <button onClick="{{ o.onClick }}" style="height:48px;border-radius:var(--radius-md);background:{{ o.bg }};border:1px solid {{ o.bd }};color:{{ o.fg }};font:500 16px var(--font-body);cursor:pointer">{{ o.label }}</button>
+                </sc-for>
+              </div>
+              <span style="font-size:12px;color:var(--color-neutral-500)">{{ q.hint }}</span>
+            </sc-if>
+            <sc-if value="{{ q.isText }}" hint-placeholder-val="{{ false }}">
+              <textarea class="input" value="{{ q.text }}" onChange="{{ q.onText }}" rows="4" placeholder="Opcional" style="font-size:15px;padding:12px;resize:vertical;min-height:96px"></textarea>
+            </sc-if>
+          </div>
+        </sc-for>
+        <span style="font-size:12px;color:var(--color-accent-300)">{{ err.survey }}</span>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary btn-block" onClick="{{ submitSurvey }}" style="height:52px;font-size:16px">Enviar respuestas</button>
+          <button class="btn btn-ghost btn-block" onClick="{{ skipSurvey }}" style="height:48px">Ahora no</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:22px">
+        <button onClick="{{ goWelcome }}" aria-label="Volver" style="width:44px;height:44px;margin-left:-10px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:22px"></i></button>
+        <h2 style="font-size:28px;margin:0">Entrar</h2>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Correo electrónico</label>
+          <input class="input" type="email" value="{{ li.email }}" onChange="{{ onLiEmail }}" placeholder="tu@correo.com" autocomplete="email" style="height:48px;font-size:16px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13px;color:var(--color-neutral-400)">Contraseña</label>
+          <input class="input" type="password" value="{{ li.pass }}" onChange="{{ onLiPass }}" autocomplete="current-password" style="height:48px;font-size:16px">
+        </div>
+        <span style="font-size:12px;color:var(--color-accent-300)">{{ err.login }}</span>
+        <button class="btn btn-primary btn-block" onClick="{{ doLogin }}" style="height:52px;font-size:16px;opacity:{{ busyOpacity }}">{{ loginCta }}</button>
+        <button onClick="{{ forgot }}" style="background:none;border:0;color:var(--color-neutral-400);font:400 13px var(--font-body);cursor:pointer;padding:10px 0;text-decoration:underline;text-underline-offset:3px">Olvidé mi contraseña</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPrivacy }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:16px;font-size:14px;line-height:1.6;color:var(--color-neutral-300)">
+        <button onClick="{{ closePrivacy }}" aria-label="Volver" style="width:44px;height:44px;margin-left:-10px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:22px"></i></button>
+        <h2 style="font-size:28px;margin:0;color:var(--color-text)">Política de privacidad</h2>
+        <p style="margin:0"><b style="font-weight:500;color:var(--color-text)">Responsable:</b> {{ cfgResp }}. Contacto: {{ cfgContact }}.</p>
+        <p style="margin:0"><b style="font-weight:500;color:var(--color-text)">Qué datos guardamos:</b> tu nombre (sin apellidos), tu correo, el nombre y el rango de edad de cada hijo, tus respuestas a los cuestionarios, tus favoritos, las palabras que registras y el uso de la app (canciones y tiempo).</p>
+        <p style="margin:0"><b style="font-weight:500;color:var(--color-text)">Para qué:</b> recomendarte canciones, mostrar el progreso de tus hijos y evaluar el impacto de Cantito en la estimulación del lenguaje. Los resultados se analizan de forma agregada.</p>
+        <p style="margin:0"><b style="font-weight:500;color:var(--color-text)">Dónde:</b> en los servidores de Google Firebase contratados por el responsable. No vendemos ni compartimos tus datos con terceros.</p>
+        <p style="margin:0"><b style="font-weight:500;color:var(--color-text)">Tus derechos:</b> puedes consultar, corregir o eliminar tus datos en cualquier momento. Desde Perfil puedes desactivar las estadísticas de uso o eliminar tu cuenta y todos tus datos.</p>
+        <p style="margin:0"><b style="font-weight:500;color:var(--color-text)">Audios:</b> las canciones se reproducen desde los servidores de Firebase. La app no usa la cámara ni el micrófono.</p>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:6px;color:var(--color-accent-300)"><i class="ph ph-music-notes-simple" style="font-size:18px"></i><span style="font-size:14px;font-weight:500">Cantito</span></div>
+          <button onClick="{{ goProfile }}" aria-label="Perfil" style="width:44px;height:44px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-neutral-800);color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-user" style="font-size:18px"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:28px;margin:0">{{ greeting }}</h2>
+          <p style="margin:0;color:var(--color-neutral-400);font-size:14px">Canciones para {{ kid.name }} · {{ kid.ageLabel }}</p>
+        </div>
+        <sc-if value="{{ manyKids }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:-6px">
+            <sc-for list="{{ kidChips }}" as="k" hint-placeholder-count="2">
+              <button onClick="{{ k.onClick }}" style="height:40px;display:flex;align-items:center;gap:8px;padding:0 14px 0 6px;border-radius:999px;background:{{ k.bg }};border:1px solid {{ k.bd }};color:{{ k.fg }};font:500 13px var(--font-body);cursor:pointer"><span style="width:28px;height:28px;border-radius:50%;background:var(--color-accent-900);color:var(--color-accent-200);display:flex;align-items:center;justify-content:center;font-size:12px">{{ k.initial }}</span>{{ k.name }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasPending }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ openPending }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:0 0 0 1px var(--color-accent-700)">
+            <i class="ph ph-clipboard-text" style="font-size:24px;color:var(--color-accent-300);flex:none"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:500">{{ pendingTitle }}</span><span style="font-size:12px;color:var(--color-neutral-400)">1 minuto · nos ayuda a medir el impacto</span></div>
+            <i class="ph ph-caret-right" style="color:var(--color-neutral-500)"></i>
+          </button>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Momento del día</span>
+          <div style="display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;scrollbar-width:none">
+            <sc-for list="{{ homeMoments }}" as="m" hint-placeholder-count="6">
+              <button onClick="{{ m.onClick }}" style="flex:none;height:44px;display:flex;align-items:center;gap:6px;padding:0 14px;border-radius:999px;background:{{ m.bg }};border:1px solid {{ m.bd }};color:{{ m.fg }};font:500 14px var(--font-body);cursor:pointer;white-space:nowrap">
+                <i class="ph {{ m.icon }}" style="font-size:17px"></i>{{ m.label }}
+                <sc-if value="{{ m.isNow }}" hint-placeholder-val="{{ false }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent);box-shadow:0 0 8px var(--color-accent)"></span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ noSongs }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <i class="ph ph-music-notes-plus" style="font-size:24px;color:var(--color-accent-300)"></i>
+            <span style="font-size:15px;font-weight:500">Pronto habrá canciones aquí</span>
+            <span style="font-size:13px;color:var(--color-neutral-400);text-wrap:pretty">El equipo de Cantito las está cargando. Vuelve en un rato.</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ momentEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start;padding:16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <i class="ph ph-music-notes-plus" style="font-size:24px;color:var(--color-accent-300)"></i>
+            <span style="font-size:14px;color:var(--color-neutral-300);text-wrap:pretty">{{ momentEmptyText }} Mientras tanto, cántale tú: tu voz es la clave.</span>
+            <button class="btn btn-secondary" onClick="{{ altMoment.onClick }}" style="height:44px">{{ altMoment.label }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasFeatured }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ featured.onOpen }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;border-radius:var(--radius-lg);overflow:hidden;background:var(--color-surface);box-shadow:0 0 0 1px var(--color-accent-800), 0 12px 40px color-mix(in srgb, var(--color-accent) 18%, transparent)">
+            <div style="height:112px;background:radial-gradient(80% 120% at 85% 0%, var(--color-accent-800), var(--color-surface) 70%);display:flex;align-items:flex-end;justify-content:space-between;padding:14px 16px;box-sizing:border-box">
+              <div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-accent);color:var(--color-accent-200);box-shadow:0 0 18px color-mix(in srgb, var(--color-accent) 40%, transparent)"><i class="ph-fill ph-play" style="font-size:20px"></i></div>
+              <span style="font-size:12px;color:var(--color-neutral-400);display:flex;gap:6px;align-items:center"><i class="ph ph-headphones"></i>{{ featured.durLabel }}</span>
+            </div>
+            <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;color:var(--color-accent-300)">{{ featuredKicker }}</span>
+              <span style="font-size:19px;font-weight:500;line-height:1.2">{{ featured.title }}</span>
+              <span style="font-size:13px;color:var(--color-neutral-400);text-wrap:pretty">{{ featured.goal }}</span>
+            </div>
+          </button>
+        </sc-if>
+        <sc-if value="{{ hasMore }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500);margin-bottom:4px">También para este momento</span>
+            <sc-for list="{{ moreSongs }}" as="s" hint-placeholder-count="0">
+              <button onClick="{{ s.onOpen }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:6px 0">
+                <div style="width:56px;height:56px;border-radius:var(--radius-md);flex:none;background:radial-gradient(90% 90% at 80% 10%, var(--color-accent-800), var(--color-neutral-900));display:flex;align-items:center;justify-content:center;color:var(--color-accent-200)"><i class="ph {{ s.icon }}" style="font-size:22px"></i></div>
+                <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <span style="font-size:15px;font-weight:500;line-height:1.25">{{ s.title }}</span>
+                  <span style="font-size:12px;color:var(--color-neutral-500)">{{ s.meta }}</span>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <i class="ph ph-microphone-stage" style="font-size:22px;color:var(--color-accent-300);flex:none"></i>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:500">Escuchado hoy</span><span style="color:var(--color-neutral-400)">{{ screenLabel }}</span></div>
+            <div style="height:4px;border-radius:2px;background:var(--color-neutral-800);overflow:hidden"><div style="height:100%;width:{{ screenPct }};background:var(--color-accent);box-shadow:0 0 8px var(--color-accent)"></div></div>
+            <span style="font-size:12px;color:var(--color-neutral-400);text-wrap:pretty">{{ screenTip }}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Trabajar un propósito</span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <sc-for list="{{ purposeTiles }}" as="p" hint-placeholder-count="9">
+              <button onClick="{{ p.onClick }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:12px 10px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm);min-height:72px" style-hover="box-shadow:0 0 0 1px var(--color-accent-700)">
+                <i class="ph {{ p.icon }}" style="font-size:20px;color:var(--color-accent-300)"></i>
+                <span style="font-size:12px;font-weight:500;line-height:1.25">{{ p.label }}</span>
+                <span style="font-size:11px;color:var(--color-neutral-500);margin-top:auto">{{ p.count }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isExplore }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <h2 style="font-size:28px;margin:0">Explorar</h2>
+          <button onClick="{{ clearFilters }}" style="background:none;border:0;color:var(--color-accent-300);font:500 14px var(--font-body);cursor:pointer;padding:10px 0">Limpiar</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;color:var(--color-neutral-400)">Edad</span>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden">
+            <sc-for list="{{ exploreAges }}" as="a" hint-placeholder-count="5">
+              <button onClick="{{ a.onClick }}" style="height:44px;border:0;background:{{ a.bg }};color:{{ a.fg }};font:500 12px var(--font-body);cursor:pointer;box-shadow:inset 0 -2px 0 {{ a.bd }}">{{ a.short }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;color:var(--color-neutral-400)">Propósito</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ explorePurposes }}" as="c" hint-placeholder-count="9">
+              <button onClick="{{ c.onClick }}" style="height:40px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer"><i class="ph {{ c.icon }}" style="font-size:16px"></i>{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;color:var(--color-neutral-400)">Momento del día</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ exploreMoments }}" as="c" hint-placeholder-count="6">
+              <button onClick="{{ c.onClick }}" style="height:40px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer"><i class="ph {{ c.icon }}" style="font-size:16px"></i>{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="height:1px;background:linear-gradient(to right, transparent, var(--color-divider) 48px, var(--color-divider) calc(100% - 48px), transparent)"></div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:13px;color:var(--color-neutral-400);margin-bottom:4px">{{ resultsLabel }}</span>
+          <sc-for list="{{ results }}" as="s" hint-placeholder-count="0">
+            <button onClick="{{ s.onOpen }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:6px 0">
+              <div style="width:56px;height:56px;border-radius:var(--radius-md);flex:none;background:radial-gradient(90% 90% at 80% 10%, var(--color-accent-800), var(--color-neutral-900));display:flex;align-items:center;justify-content:center;color:var(--color-accent-200)"><i class="ph {{ s.icon }}" style="font-size:22px"></i></div>
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font-size:15px;font-weight:500;line-height:1.25">{{ s.title }}</span>
+                <span style="font-size:12px;color:var(--color-neutral-500)">{{ s.meta }}</span>
+              </div>
+            </button>
+          </sc-for>
+          <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:8px 0 0;font-size:14px;color:var(--color-neutral-400);text-wrap:pretty">Ninguna canción cumple todos los filtros. Quita un propósito o un momento.</p>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRoutine }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:28px;margin:0">Mi día</h2>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-400);text-wrap:pretty">Acompaña cada rutina y transición con una canción. Las guardadas aparecen primero.</p>
+        </div>
+        <sc-for list="{{ routine }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;gap:12px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+              <span style="width:36px;height:36px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid {{ r.ring }};color:var(--color-accent-300)"><i class="ph {{ r.icon }}" style="font-size:18px"></i></span>
+              <span style="flex:1;width:1px;background:linear-gradient(to bottom, var(--color-divider), transparent)"></span>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-bottom:8px">
+              <span style="font-size:15px;font-weight:500;padding-top:7px">{{ r.label }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-500)">{{ r.hint }}</span>
+              <sc-for list="{{ r.songs }}" as="s" hint-placeholder-count="0">
+                <button onClick="{{ s.onOpen }}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;padding:6px 0">
+                  <div style="width:40px;height:40px;border-radius:var(--radius-sm);flex:none;background:radial-gradient(90% 90% at 80% 10%, var(--color-accent-800), var(--color-neutral-900));display:flex;align-items:center;justify-content:center;color:var(--color-accent-200)"><i class="ph {{ s.icon }}" style="font-size:18px"></i></div>
+                  <span style="font-size:14px;line-height:1.25;min-width:0">{{ s.title }}</span>
+                  <sc-if value="{{ s.isFav }}" hint-placeholder-val="{{ false }}"><i class="ph-fill ph-heart" style="font-size:14px;color:var(--color-accent-300);flex:none"></i></sc-if>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isProgress }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:28px;margin:0">Progreso de {{ kid.name }}</h2>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-400)">Anota cada palabra nueva que diga.</p>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="font-size:56px;font-weight:500;line-height:1;color:var(--color-accent-200)">{{ wordCount }}</span>
+          <span style="font-size:14px;color:var(--color-neutral-400)">palabras nuevas registradas</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input class="input" value="{{ newWord }}" onChange="{{ onNewWord }}" onKeyDown="{{ onWordKey }}" placeholder="ej. pelota" style="flex:1;min-width:0;height:48px;font-size:16px">
+          <button class="btn btn-primary" onClick="{{ addWordBtn }}" style="height:48px;padding:0 18px">Agregar</button>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ wordsList }}" as="w" hint-placeholder-count="0">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-bottom:1px solid var(--color-divider)">
+              <span style="font-size:16px;font-weight:500">{{ w.word }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-500);text-align:right">{{ w.meta }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noWords }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:0;font-size:14px;color:var(--color-neutral-400);text-wrap:pretty">Aún no hay palabras. También puedes registrarlas tocando las palabras de cada canción.</p>
+          </sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;padding-left:12px;border-left:2px solid var(--color-accent)">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-300)">Qué esperar · {{ kid.ageLabel }}</span>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-300);text-wrap:pretty">{{ kid.hito }}</p>
+          <span style="font-size:12px;color:var(--color-neutral-500)">Respetar, mas NO desatender.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLearn }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:28px;margin:0">Aprende</h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">¿Cuál es el progreso de la comunicación?</span>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden">
+            <sc-for list="{{ learnAges }}" as="a" hint-placeholder-count="5">
+              <button onClick="{{ a.onClick }}" style="height:44px;border:0;background:{{ a.bg }};color:{{ a.fg }};font:500 12px var(--font-body);cursor:pointer;box-shadow:inset 0 -2px 0 {{ a.bd }}">{{ a.short }}</button>
+            </sc-for>
+          </div>
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-300);text-wrap:pretty">{{ learnHito }}</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ tips }}" as="pt" hint-placeholder-count="6">
+            <div style="display:flex;gap:10px;padding:12px 14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm);font-size:14px;color:var(--color-neutral-300)"><i class="ph ph-chat-circle-dots" style="font-size:18px;color:var(--color-accent-300);flex:none"></i><span style="text-wrap:pretty">{{ pt }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:20px">
+        <button onClick="{{ goHome }}" aria-label="Volver" style="width:44px;height:44px;margin-left:-10px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:22px"></i></button>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <h2 style="font-size:28px;margin:0">{{ fam.parent }}</h2>
+          <span style="font-size:14px;color:var(--color-neutral-400)">{{ fam.email }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Hijos</span>
+          <sc-for list="{{ kidChips }}" as="k" hint-placeholder-count="1">
+            <button onClick="{{ k.onClick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:0 0 0 1px {{ k.bd }}">
+              <span style="width:36px;height:36px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:var(--color-accent-900);color:var(--color-accent-200);font-size:14px">{{ k.initial }}</span>
+              <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:500">{{ k.name }}</span><span style="font-size:12px;color:var(--color-neutral-500)">{{ k.age }}</span></div>
+            </button>
+          </sc-for>
+          <button class="btn btn-secondary btn-block" onClick="{{ addKidFromProfile }}" style="height:48px"><i class="ph ph-plus"></i>Agregar hijo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Privacidad</span>
+          <button onClick="{{ toggleUsageProfile }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;font-size:14px;min-height:44px">
+            <i class="{{ usageProfileIcon }}" style="font-size:24px;color:var(--color-accent-300);flex:none"></i><span>Compartir estadísticas de uso</span>
+          </button>
+          <button onClick="{{ openPrivacy }}" style="background:none;border:0;padding:6px 0;color:var(--color-accent-300);font:500 14px var(--font-body);cursor:pointer;text-align:left">Política de privacidad</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost btn-block" onClick="{{ logout }}" style="height:48px">Cerrar sesión</button>
+          <button onClick="{{ deleteAll }}" style="height:44px;background:none;border:0;color:var(--color-neutral-500);font:400 13px var(--font-body);cursor:pointer;text-decoration:underline;text-underline-offset:3px">{{ deleteLabel }}</button>
+          <span style="font-size:12px;color:var(--color-accent-300);text-align:center">{{ err.profile }}</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPlayer }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px">
+          <button onClick="{{ goBack }}" aria-label="Volver" style="width:44px;height:44px;border-radius:50%;background:var(--color-surface);border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-caret-left" style="font-size:20px"></i></button>
+          <button onClick="{{ toggleFav }}" aria-label="Guardar" style="width:44px;height:44px;border-radius:50%;background:var(--color-surface);border:0;color:{{ favColor }};cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="{{ favIcon }}" style="font-size:20px"></i></button>
+        </div>
+        <div style="padding:8px 20px 0;display:flex;flex-direction:column;gap:18px">
+          <div style="width:100%;height:240px;border-radius:var(--radius-lg);background:radial-gradient(70% 90% at 70% 15%, var(--color-accent-800), var(--color-surface) 75%);display:flex;align-items:center;justify-content:center;box-shadow:{{ glow }};transition:box-shadow .4s">
+            <i class="ph ph-music-notes-simple" style="font-size:72px;color:var(--color-accent-300)"></i>
+          </div>
+          <sc-if value="{{ hasAudio }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div onClick="{{ seek }}" style="height:24px;display:flex;align-items:center;cursor:pointer"><div style="flex:1;height:4px;border-radius:2px;background:var(--color-neutral-800);overflow:hidden"><div style="height:100%;width:{{ progressPct }};background:var(--color-accent);box-shadow:0 0 8px var(--color-accent)"></div></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums"><span>{{ tLabel }}</span><span>{{ durLabel }}</span></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:18px">
+              <button onClick="{{ toggleLoop }}" aria-label="Repetir" style="width:44px;height:44px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center;color:{{ loopColor }}"><i class="ph ph-repeat" style="font-size:22px"></i></button>
+              <button onClick="{{ back10 }}" aria-label="Retroceder 10 segundos" style="width:44px;height:44px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-arrow-counter-clockwise" style="font-size:24px"></i></button>
+              <button onClick="{{ togglePlay }}" aria-label="Reproducir o pausar" style="width:72px;height:72px;border-radius:50%;background:transparent;border:1px solid var(--color-accent);color:var(--color-accent-200);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px color-mix(in srgb, var(--color-accent) 30%, transparent)"><i class="{{ playIcon }}" style="font-size:28px"></i></button>
+              <button onClick="{{ fwd10 }}" aria-label="Adelantar 10 segundos" style="width:44px;height:44px;border-radius:50%;background:none;border:0;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ph ph-arrow-clockwise" style="font-size:24px"></i></button>
+              <span style="width:44px"></span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noAudio }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:14px;color:var(--color-neutral-400);text-align:center">Audio en preparación. Mientras tanto, cántala tú.</p>
+          </sc-if>
+        </div>
+        <div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h3 style="font-size:23px;margin:0">{{ cur.title }}</h3>
+            <span style="font-size:13px;color:var(--color-neutral-500)">{{ curChannel }}</span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ curTags }}" as="t" hint-placeholder-count="3"><span class="tag tag-accent">{{ t }}</span></sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;padding-left:12px;border-left:2px solid var(--color-accent)">
+            <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-300)">Qué estimula</span>
+            <p style="margin:0;font-size:15px;text-wrap:pretty">{{ cur.goal }}</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Cómo cantarla juntos</span>
+            <sc-for list="{{ curSteps }}" as="st" hint-placeholder-count="3">
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <span style="flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--color-accent-700);color:var(--color-accent-300);font-size:12px;display:flex;align-items:center;justify-content:center">{{ st.n }}</span>
+                <span style="font-size:14px;color:var(--color-neutral-300);text-wrap:pretty">{{ st.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ hasLyrics }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Letra</span>
+              <div style="display:flex;flex-direction:column;font-size:16px;line-height:1.7;color:var(--color-neutral-200)">
+                <sc-for list="{{ lyricsLines }}" as="ln" hint-placeholder-count="0"><span style="min-height:1em">{{ ln }}</span></sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <div style="display:flex;gap:10px;padding:12px 14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm);font-size:14px;color:var(--color-neutral-300)"><i class="ph ph-chat-circle-dots" style="font-size:18px;color:var(--color-accent-300);flex:none"></i><span style="text-wrap:pretty">{{ strat.point }}</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)">Palabras para practicar</span>
+            <span style="font-size:12px;color:var(--color-neutral-400);margin-top:-6px">Toca la que {{ kid.name }} diga para registrarla.</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ wordChips }}" as="w" hint-placeholder-count="4">
+                <button onClick="{{ w.onClick }}" style="height:40px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:var(--radius-md);background:{{ w.bg }};border:1px solid {{ w.bd }};color:{{ w.fg }};font:500 15px var(--font-body);cursor:pointer"><i class="ph {{ w.icon }}" style="font-size:14px"></i>{{ w.word }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500);margin-bottom:4px">Siguiente</span>
+              <sc-for list="{{ nextSongs }}" as="s" hint-placeholder-count="0">
+                <button onClick="{{ s.onOpen }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:6px 0">
+                  <div style="width:56px;height:56px;border-radius:var(--radius-md);flex:none;background:radial-gradient(90% 90% at 80% 10%, var(--color-accent-800), var(--color-neutral-900));display:flex;align-items:center;justify-content:center;color:var(--color-accent-200)"><i class="ph {{ s.icon }}" style="font-size:22px"></i></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                    <span style="font-size:15px;font-weight:500;line-height:1.25">{{ s.title }}</span>
+                    <span style="font-size:12px;color:var(--color-neutral-500)">{{ s.meta }}</span>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasMini }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ mini.open }}" style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));width:calc(100% - 20px);max-width:500px;box-sizing:border-box;z-index:6;cursor:pointer;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:0 0 0 1px var(--color-accent-800), var(--shadow-md);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 8px 8px 14px">
+          <i class="ph ph-music-notes-simple" style="font-size:20px;color:var(--color-accent-300)"></i>
+          <span style="flex:1;min-width:0;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ mini.title }}</span>
+          <button onClick="{{ mini.toggle }}" aria-label="Reproducir o pausar" style="width:44px;height:44px;border-radius:50%;background:none;border:1px solid var(--color-accent-700);color:var(--color-accent-200);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="{{ mini.icon }}" style="font-size:18px"></i></button>
+        </div>
+        <div style="height:2px;background:var(--color-neutral-800)"><div style="height:100%;width:{{ mini.pct }};background:var(--color-accent)"></div></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;box-sizing:border-box;padding:8px 10px calc(14px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);background:linear-gradient(to top, var(--color-bg) 70%, transparent);z-index:5">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+          <button onClick="{{ t.onClick }}" style="height:52px;background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:{{ t.color }};font:500 11px var(--font-body);cursor:pointer">
+            <i class="{{ t.icon }}" style="font-size:22px"></i>{{ t.label }}
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;left:50%;transform:translateX(-50%);width:calc(100% - 40px);max-width:480px;bottom:96px;z-index:40;padding:12px 14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-md);font-size:13px;display:flex;gap:8px;align-items:center;box-sizing:border-box"><i class="ph ph-check-circle" style="color:var(--color-accent-300);font-size:18px"></i>{{ toast }}</div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const DAY = 864e5;
+const momentForHour = h => h < 5 ? 'Dormir' : h < 9 ? 'Despertar' : h < 11 ? 'Juego' : h < 14 ? 'Comidas' : h < 17 ? 'Salidas' : h < 19 ? 'Juego' : h < 20 ? 'Higiene' : 'Dormir';
+const ON = { bg: 'var(--color-accent-900)', bd: 'var(--color-accent)', fg: 'var(--color-accent-200)' };
+const OFF = { bg: 'var(--color-surface)', bd: 'var(--color-neutral-800)', fg: 'var(--color-neutral-300)' };
+const SEG = on => ({ bg: on ? 'var(--color-accent-900)' : 'var(--color-surface)', fg: on ? 'var(--color-accent-200)' : 'var(--color-neutral-400)', bd: on ? 'var(--color-accent)' : 'transparent' });
+const fmtDate = t => new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+const fmtDur = s => s ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '';
+const screenKey = () => 'cantito.w.screen.' + new Date().toDateString();
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.nowMoment = momentForHour(new Date().getHours());
+    this.state = { screen: 'loading', prev: 'home', fam: null, active: 0, su: { parent: '', email: '', pass: '' }, li: { email: '', pass: '' }, err: {}, busy: false,
+      priv: false, usage: true, draftKids: [], draft: { name: '', age: null }, addingFromProfile: false, confirmDelete: false,
+      moment: this.nowMoment, fAge: null, fP: [], fM: [], learnAge: null, cur: null, newWord: '', toast: '', songs: [], nowId: null, playing: false, t: 0, dur: 0, loop: false, sv: null, privBack: 'consent' };
+  }
+  componentDidMount() {
+    const init = () => {
+      if (!window.CantitoData || !window.CantitoBackend) return setTimeout(init, 50);
+      this.D = window.CantitoData; this.B = window.CantitoBackend; this.cfg = window.CANTITO_CONFIG || {};
+      this.setupAudio();
+      Promise.all([this.B.currentFamily().catch(() => null), this.B.listSongs(false).catch(() => [])]).then(([fam, songs]) => {
+        this.setState({ songs });
+        if (fam) this.enter(fam); else this.setState({ screen: 'welcome' });
+      }).catch(() => this.setState({ screen: 'welcome' }));
+    };
+    init();
+  }
+  componentDidUpdate() { const k = this.state.screen + '|' + this.state.cur; if (k !== this._navKey) { this._navKey = k; window.scrollTo(0, 0); } }
+  log(type, extra) { const fam = this.state.fam; if (!fam || !this.B) return; const kid = fam.kids[this.state.active]; this.B.logEvent(fam, { type, kidAge: kid ? kid.age : null, ...extra }); }
+  saveFam(fam) { this.setState({ fam }); this.B.saveFamily(fam).catch(() => this.flash('No se pudo guardar. Revisa tu conexión.')); }
+  enter(fam) { this.setState({ fam, active: 0, screen: 'home', err: {}, fAge: fam.kids[0] ? fam.kids[0].age : null }, () => this.log('session')); }
+  flash(msg) { this.setState({ toast: msg }); clearTimeout(this._tt); this._tt = setTimeout(() => this.setState({ toast: '' }), 2200); }
+  go(screen) { this.setState({ screen, err: {}, confirmDelete: false }); }
+  componentWillUnmount() { if (this.audio) this.audio.pause(); }
+  setupAudio() {
+    const a = this.audio = new Audio(); a.preload = 'metadata';
+    let last = 0;
+    a.addEventListener('timeupdate', () => {
+      const now = a.currentTime;
+      if (!a.paused) { const d = now - last; if (d > 0 && d < 2) this.listened = (this.listened || 0) + d; }
+      last = now; this.setState({ t: now });
+    });
+    a.addEventListener('seeking', () => { last = a.currentTime; });
+    a.addEventListener('loadedmetadata', () => this.setState({ dur: a.duration || 0 }));
+    a.addEventListener('play', () => this.setState({ playing: true }));
+    a.addEventListener('pause', () => { this.setState({ playing: false }); this.flushListen(); });
+    a.addEventListener('ended', () => this.log('complete', { song: this.state.nowId }));
+    a.addEventListener('error', () => { if (a.getAttribute('src') && this.state.nowId) this.flash('No se pudo cargar el audio. Revisa tu conexión.'); });
+    if ('mediaSession' in navigator) {
+      const ms = navigator.mediaSession;
+      try {
+        ms.setActionHandler('play', () => a.play()); ms.setActionHandler('pause', () => a.pause());
+        ms.setActionHandler('seekbackward', () => { a.currentTime = Math.max(0, a.currentTime - 10); });
+        ms.setActionHandler('seekforward', () => { a.currentTime = Math.min(a.duration || 0, a.currentTime + 10); });
+      } catch (e) {}
+    }
+  }
+  flushListen() {
+    const sec = Math.round(this.listened || 0); this.listened = 0;
+    if (sec < 1 || !this.state.nowId) return;
+    this.log('play_time', { song: this.state.nowId, sec });
+    try { localStorage.setItem(screenKey(), String((+localStorage.getItem(screenKey()) || 0) + sec)); } catch (e) {}
+  }
+  async playSong(s) {
+    const a = this.audio; if (!a || !s || !s.audioUrl) return;
+    if (this.state.nowId !== s.id) {
+      this.flushListen();
+      a.src = s.audioUrl.startsWith('idb:') ? await this.B.resolveAudio(s.audioUrl) : s.audioUrl;
+      a.loop = this.state.loop;
+      this.setState({ nowId: s.id, t: 0, dur: s.dur || 0 });
+      this.log('play', { song: s.id, moment: this.state.moment, purposes: s.purposes });
+      if ('mediaSession' in navigator && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: s.artist || 'Cantito', album: 'Cantito', artwork: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] });
+    }
+    a.play().catch(() => {});
+  }
+  catalog() { return this.state.songs; }
+  open(id) {
+    const s = this.catalog().find(x => x.id === id);
+    this.setState(st => ({ cur: id, screen: 'player', prev: st.screen === 'player' ? st.prev : st.screen }));
+    if (s) this.playSong(s);
+  }
+  row(s, favs) {
+    const p = this.D.PURPOSES.find(x => x.label === (s.purposes || [])[0]);
+    return { title: s.title, goal: s.goal, purposes: s.purposes || [], isFav: favs.includes(s.id),
+      meta: [s.artist, fmtDur(s.dur)].filter(Boolean).join(' · '), durLabel: fmtDur(s.dur) || 'Audio',
+      icon: this.state.nowId === s.id && this.state.playing ? 'ph-speaker-high' : (p ? p.icon : 'ph-music-notes'), onOpen: () => this.open(s.id) };
+  }
+  playerVals(cur) {
+    const st = this.state, a = this.audio, isNow = st.nowId === cur.id;
+    const t = isNow ? st.t : 0, dur = (isNow && st.dur) || cur.dur || 0;
+    const nowSong = st.songs.find(s => s.id === st.nowId);
+    return {
+      hasAudio: !!cur.audioUrl, noAudio: !cur.audioUrl,
+      playIcon: isNow && st.playing ? 'ph-fill ph-pause' : 'ph-fill ph-play',
+      togglePlay: () => { if (isNow && st.playing) a.pause(); else this.playSong(cur); },
+      back10: () => { if (isNow) a.currentTime = Math.max(0, a.currentTime - 10); },
+      fwd10: () => { if (isNow) a.currentTime = Math.min(a.duration || 0, a.currentTime + 10); },
+      seek: e => { if (!isNow || !dur) return; const r = e.currentTarget.getBoundingClientRect(); a.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * dur; },
+      progressPct: (dur ? Math.min(100, t / dur * 100) : 0) + '%', tLabel: fmtDur(t) || '0:00', durLabel: fmtDur(dur) || '0:00',
+      loopColor: st.loop ? 'var(--color-accent-300)' : 'var(--color-neutral-500)',
+      toggleLoop: () => { const l = !st.loop; if (a) a.loop = l; this.setState({ loop: l }); },
+      glow: isNow && st.playing ? '0 0 48px color-mix(in srgb, var(--color-accent) 45%, transparent)' : 'none',
+      hasLyrics: !!(cur.lyrics || '').trim(), lyricsLines: (cur.lyrics || '').split('\n'),
+      hasMini: !!nowSong && ['home', 'explore', 'routine', 'progress', 'learn', 'profile'].includes(st.screen),
+      mini: nowSong ? { title: nowSong.title, icon: st.playing ? 'ph-fill ph-pause' : 'ph-fill ph-play', pct: (st.dur ? st.t / st.dur * 100 : 0) + '%',
+        toggle: e => { e.stopPropagation(); if (st.playing) a.pause(); else a.play().catch(() => {}); }, open: () => this.open(nowSong.id) } : {},
+    };
+  }
+  toggleArr(key, v) { this.setState(s => ({ [key]: s[key].includes(v) ? s[key].filter(x => x !== v) : [...s[key], v] })); }
+  pending(fam) {
+    if (!fam) return null;
+    const days = this.cfg.finalAfterDays ?? 28;
+    for (let i = 0; i < fam.kids.length; i++) { const sv = fam.kids[i].surveys; if (!sv || !sv.inicial) return { i, kind: 'inicial' }; }
+    for (let i = 0; i < fam.kids.length; i++) { const sv = fam.kids[i].surveys; if (sv && sv.inicial && !sv.final && Date.now() - sv.inicial.t >= days * DAY) return { i, kind: 'final' }; }
+    return null;
+  }
+  startSurvey(p) { this.setState({ sv: { i: p.i, kind: p.kind, a: {} }, screen: 'survey', err: {} }); }
+
+  renderVals() {
+    const D = this.D, B = this.B, st = this.state, scr = st.screen;
+    const base = { isLoading: scr === 'loading', isLocal: !!B && B.mode === 'local' && scr !== 'loading', isWelcome: scr === 'welcome', isSignup: scr === 'signup', isConsent: scr === 'consent', isChild: scr === 'child', isLogin: scr === 'login', isPrivacy: scr === 'privacy', isSurvey: scr === 'survey',
+      su: st.su, li: st.li, err: st.err, draft: st.draft, toast: st.toast, hasToast: !!st.toast, busyOpacity: st.busy ? 0.5 : 1,
+      goSignup: () => this.setState({ screen: 'signup', err: {} }), goLogin: () => this.setState({ screen: 'login', err: {} }), goWelcome: () => this.setState({ screen: 'welcome', err: {} }) };
+    if (!D || !B) return base;
+    const cfg = this.cfg;
+    const setSu = k => e => this.setState({ su: { ...st.su, [k]: e.target.value } });
+    const fam = st.fam || { parent: '', email: '', kids: [], favs: [], words: [] };
+    const kidRaw = fam.kids[st.active] || fam.kids[0] || { name: 'tu hijo', age: 2, id: '' };
+    const kid = { ...kidRaw, ageLabel: D.AGES[kidRaw.age].label, hito: D.AGES[kidRaw.age].hito };
+    const cat = this.catalog(), favs = fam.favs || [];
+    const forAge = cat.filter(s => s.ages.includes(kid.age));
+    let sug = forAge.filter(s => s.moments.includes(st.moment));
+    const featured = sug[0] ? this.row(sug[0], favs) : null;
+    const mLabel = k => (D.MOMENTS.find(m => m.key === k) || {}).label;
+    const results = cat.filter(s => (st.fAge == null || s.ages.includes(st.fAge)) && (!st.fP.length || s.purposes.some(p => st.fP.includes(p))) && (!st.fM.length || s.moments.some(m => st.fM.includes(m))));
+    const cur = cat.find(s => s.id === st.cur) || cat[0] || { id: '', title: '', ages: [], purposes: [], moments: [], steps: [], words: [], strat: 4, goal: '' };
+    const isFav = favs.includes(cur.id);
+    let secToday = 0; try { secToday = +localStorage.getItem(screenKey()) || 0; } catch (e) {}
+    const minToday = Math.round(secToday / 60);
+    const kidWords = (fam.words || []).filter(w => w.kid === kid.id).sort((a, b) => b.t - a.t);
+    const strat = D.STRATEGIES[(cur.strat || 4) - 1] || D.STRATEGIES[3];
+    const tabDefs = [['home', 'Inicio', 'house'], ['explore', 'Explorar', 'magnifying-glass'], ['routine', 'Mi día', 'calendar-check'], ['progress', 'Progreso', 'chart-line-up'], ['learn', 'Aprende', 'book-open']];
+    const draftValid = st.draft.name.trim() && st.draft.age != null;
+    const pushDraft = () => draftValid ? [...st.draftKids, { id: 'k' + Date.now().toString(36), name: st.draft.name.trim(), age: st.draft.age }] : st.draftKids;
+    const addWord = (w, song) => {
+      w = (w || '').trim(); if (!w || kidWords.some(x => x.word.toLowerCase() === w.toLowerCase())) return;
+      this.saveFam({ ...fam, words: [...(fam.words || []), { kid: kid.id, word: w, t: Date.now(), song: song || '' }] });
+      this.log('word_add', { word: w, song: song || '' }); this.flash(`«${w}» registrada para ${kid.name}`);
+    };
+    const pend = this.pending(st.fam);
+    // survey
+    const sv = st.sv, svKid = sv && fam.kids[sv.i];
+    const qs = sv ? D.SURVEY[sv.kind] : [];
+    const setA = (id, v) => this.setState({ sv: { ...sv, a: { ...sv.a, [id]: v } }, err: {} });
+    const surveyQs = qs.map(q => ({ q: q.q.replace('{nombre}', svKid ? svKid.name : ''), hint: q.hint || '', isChoice: q.type === 'choice', isScale: q.type === 'scale', isText: q.type === 'text',
+      opts: (q.type === 'scale' ? ['1', '2', '3', '4', '5'] : (q.options || [])).map((o, j) => { const val = q.type === 'scale' ? j + 1 : o; return { label: o, ...(sv.a[q.id] === val ? ON : OFF), onClick: () => setA(q.id, val) }; }),
+      text: (sv && sv.a[q.id]) || '', onText: e => setA(q.id, e.target.value) }));
+    return { ...base,
+      isHome: scr === 'home', isExplore: scr === 'explore', isRoutine: scr === 'routine', isProgress: scr === 'progress', isLearn: scr === 'learn', isProfile: scr === 'profile', isPlayer: scr === 'player',
+      showTabs: ['home', 'explore', 'routine', 'progress', 'learn'].includes(scr),
+      onSuParent: setSu('parent'), onSuEmail: setSu('email'), onSuPass: setSu('pass'),
+      signupNext: () => {
+        const e = {};
+        if (!st.su.parent.trim()) e.parent = 'Escribe tu nombre.'; else if (/\s/.test(st.su.parent.trim())) e.parent = 'Solo el nombre, sin apellidos.';
+        if (!/^\S+@\S+\.\S+$/.test(st.su.email.trim())) e.email = 'Revisa el correo.';
+        if (st.su.pass.length < 8) e.pass = 'Usa al menos 8 caracteres.';
+        this.setState({ err: e, screen: Object.keys(e).length ? 'signup' : 'consent' });
+      },
+      privIcon: st.priv ? 'ph-fill ph-check-square' : 'ph ph-square', usageIcon: st.usage ? 'ph-fill ph-check-square' : 'ph ph-square',
+      togglePriv: () => this.setState({ priv: !st.priv, err: {} }), toggleUsage: () => this.setState({ usage: !st.usage }),
+      openPrivacy: () => this.setState({ privBack: scr, screen: 'privacy' }), closePrivacy: () => this.setState({ screen: st.privBack || 'welcome' }),
+      cfgResp: cfg.responsable || 'Versania Nova', cfgContact: cfg.contacto || '',
+      consentNext: () => st.priv ? this.setState({ screen: 'child', err: {}, addingFromProfile: false }) : this.setState({ err: { consent: 'Debes aceptar la política de privacidad para continuar.' } }),
+      childStep: st.addingFromProfile ? 'Nuevo hijo' : 'Paso 3 de 3',
+      childCta: st.busy ? 'Creando cuenta…' : st.addingFromProfile ? 'Guardar' : 'Crear cuenta',
+      childBack: () => this.setState({ screen: st.addingFromProfile ? 'profile' : 'consent', err: {} }),
+      kidsList: st.draftKids.map((k, i) => ({ name: k.name, initial: k.name[0].toUpperCase(), age: D.AGES[k.age].label, onRemove: () => this.setState({ draftKids: st.draftKids.filter((_, j) => j !== i) }) })),
+      onDraftName: e => this.setState({ draft: { ...st.draft, name: e.target.value } }),
+      draftAges: D.AGES.map((a, i) => ({ label: a.label, ...(st.draft.age === i ? ON : OFF), onClick: () => this.setState({ draft: { ...st.draft, age: i }, err: {} }) })),
+      addKid: () => draftValid ? this.setState({ draftKids: pushDraft(), draft: { name: '', age: null }, err: {} }) : this.setState({ err: { child: 'Escribe el nombre y elige la edad.' } }),
+      childNext: async () => {
+        if (st.busy) return;
+        const kids = pushDraft();
+        if (!kids.length) return this.setState({ err: { child: 'Agrega al menos un hijo.' } });
+        if (st.addingFromProfile) {
+          const nf = { ...fam, kids: [...fam.kids, ...kids] };
+          this.saveFam(nf); this.log('kid_add', { n: kids.length });
+          this.setState({ draftKids: [], draft: { name: '', age: null } });
+          return this.startSurvey({ i: fam.kids.length, kind: 'inicial' });
+        }
+        this.setState({ busy: true, err: {} });
+        try {
+          const nf = await B.signUp(st.su.email, st.su.pass, { parent: st.su.parent.trim(), usage: st.usage, kids, favs: [], words: [] });
+          B.logEvent(nf, { type: 'register', kidAge: kids[0].age, kids: kids.map(k => k.age) });
+          this.setState({ busy: false, fam: nf, active: 0, fAge: kids[0].age, draftKids: [], draft: { name: '', age: null }, su: { parent: '', email: '', pass: '' } }, () => this.startSurvey({ i: 0, kind: 'inicial' }));
+        } catch (e) { this.setState({ busy: false, err: { child: B.msg(e) } }); }
+      },
+      svKicker: sv ? (sv.kind === 'inicial' ? 'Cuestionario inicial' : 'Cuestionario final') + (fam.kids.length > 1 ? ` · ${sv.i + 1} de ${fam.kids.length}` : '') : '',
+      svTitle: svKid ? `Sobre ${svKid.name}` : '',
+      svIntro: sv && sv.kind === 'final' ? `Ya llevan ${cfg.finalAfterDays ?? 28} días con Cantito. Responde igual que la primera vez para comparar.` : 'Antes de empezar, 1 minuto. Lo repetiremos en unas semanas para ver el avance.',
+      surveyQs,
+      submitSurvey: () => {
+        const missing = qs.filter(q => q.type !== 'text' && sv.a[q.id] == null);
+        if (missing.length) return this.setState({ err: { survey: 'Responde todas las preguntas (la última es opcional).' } });
+        const kids = fam.kids.map((k, i) => i === sv.i ? { ...k, surveys: { ...(k.surveys || {}), [sv.kind]: { a: sv.a, t: Date.now() } } } : k);
+        const nf = { ...fam, kids };
+        this.saveFam(nf); this.log('survey', { kind: sv.kind, kidAge: fam.kids[sv.i].age });
+        const next = this.pending(nf);
+        if (next && next.kind === sv.kind) this.startSurvey(next);
+        else { this.setState({ screen: 'home', sv: null }); this.flash('¡Gracias! Respuestas guardadas.'); }
+      },
+      skipSurvey: () => this.setState({ screen: 'home', sv: null }),
+      hasPending: !!pend, pendingTitle: pend ? `${pend.kind === 'inicial' ? 'Cuestionario inicial' : 'Cuestionario final'} de ${fam.kids[pend.i].name}` : '',
+      openPending: () => pend && this.startSurvey(pend),
+      onLiEmail: e => this.setState({ li: { ...st.li, email: e.target.value } }), onLiPass: e => this.setState({ li: { ...st.li, pass: e.target.value } }),
+      loginCta: st.busy ? 'Entrando…' : 'Entrar',
+      doLogin: async () => {
+        if (st.busy) return;
+        this.setState({ busy: true, err: {} });
+        try { const f = await B.signIn(st.li.email, st.li.pass); this.setState({ busy: false, li: { email: '', pass: '' } }); if (f) this.enter(f); else this.setState({ err: { login: 'No encontramos tus datos. Escríbenos.' } }); }
+        catch (e) { this.setState({ busy: false, err: { login: B.msg(e) } }); }
+      },
+      forgot: async () => {
+        if (!/^\S+@\S+\.\S+$/.test(st.li.email.trim())) return this.setState({ err: { login: 'Escribe tu correo arriba y vuelve a tocar «Olvidé mi contraseña».' } });
+        try { await B.resetPassword(st.li.email); this.flash('Te enviamos un correo para cambiar la contraseña.'); }
+        catch (e) { this.setState({ err: { login: B.mode === 'local' ? 'Disponible cuando la app esté conectada a la base de datos.' : B.msg(e) } }); }
+      },
+      fam, kid,
+      greeting: (h => h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches')(new Date().getHours()) + ', ' + fam.parent,
+      manyKids: fam.kids.length > 1,
+      kidChips: fam.kids.map((k, i) => ({ name: k.name, initial: k.name[0].toUpperCase(), age: D.AGES[k.age].label, ...(i === st.active ? ON : OFF), onClick: () => this.setState({ active: i, fAge: k.age }) })),
+      goProfile: () => this.go('profile'), goHome: () => this.go('home'),
+      homeMoments: D.MOMENTS.map(m => ({ label: m.label, icon: m.icon, ...(st.moment === m.key ? ON : OFF), isNow: m.key === this.nowMoment, onClick: () => this.setState({ moment: m.key }) })),
+      hasFeatured: !!featured, featured: featured || {}, noSongs: !cat.length,
+      momentEmpty: !!cat.length && !featured, momentEmptyText: `Aún no hay canciones con audio para «${mLabel(st.moment)}» a esta edad.`,
+      altMoment: (() => { const m = D.MOMENTS.find(m => forAge.some(s => s.moments.includes(m.key))); return m ? { label: 'Ver ' + m.label, onClick: () => this.setState({ moment: m.key }) } : { label: 'Explorar canciones', onClick: () => this.go('explore') }; })(),
+      featuredKicker: featured ? `${mLabel(st.moment)} · ${featured.purposes.slice(0, 2).join(', ')}` : '',
+      moreSongs: sug.slice(1, 4).map(s => this.row(s, favs)), hasMore: sug.length > 1,
+      screenLabel: `${minToday} min`, screenPct: Math.min(100, minToday / 20 * 100) + '%', screenTip: 'Canta encima de la grabación y mírale a la cara: tu voz es la clave.',
+      purposeTiles: D.PURPOSES.map(p => { const n = forAge.filter(s => s.purposes.includes(p.label)).length;
+        return { label: p.label, icon: p.icon, count: n === 1 ? '1 canción' : `${n} canciones`, onClick: () => { this.log('purpose_open', { purpose: p.label }); this.setState({ fAge: kid.age, fP: [p.label], fM: [], screen: 'explore' }); } }; }),
+      exploreAges: D.AGES.map((a, i) => ({ short: a.short, ...SEG(st.fAge === i), onClick: () => this.setState({ fAge: st.fAge === i ? null : i }) })),
+      explorePurposes: D.PURPOSES.map(p => ({ label: p.label, icon: p.icon, ...(st.fP.includes(p.label) ? ON : OFF), onClick: () => this.toggleArr('fP', p.label) })),
+      exploreMoments: D.MOMENTS.map(m => ({ label: m.label, icon: m.icon, ...(st.fM.includes(m.key) ? ON : OFF), onClick: () => this.toggleArr('fM', m.key) })),
+      clearFilters: () => this.setState({ fAge: null, fP: [], fM: [] }),
+      results: results.map(s => this.row(s, favs)), noResults: !results.length, resultsLabel: results.length === 1 ? '1 canción' : `${results.length} canciones`,
+      routine: D.MOMENTS.map(m => { const list = forAge.filter(s => s.moments.includes(m.key)).sort((a, b) => favs.includes(b.id) - favs.includes(a.id) || !!b.yt - !!a.yt);
+        return { label: m.label, icon: m.icon, hint: m.hint || (list.length ? '' : 'Sin canciones para esta edad'), ring: m.key === this.nowMoment ? 'var(--color-accent)' : 'var(--color-neutral-800)', songs: list.slice(0, 2).map(s => this.row(s, favs)) }; }),
+      wordCount: kidWords.length, newWord: st.newWord,
+      onNewWord: e => this.setState({ newWord: e.target.value }),
+      onWordKey: e => { if (e.key === 'Enter') { addWord(st.newWord); this.setState({ newWord: '' }); } },
+      addWordBtn: () => { addWord(st.newWord); this.setState({ newWord: '' }); },
+      wordsList: kidWords.map(w => ({ word: w.word, meta: fmtDate(w.t) + (w.song ? ' · ' + w.song : '') })), noWords: !kidWords.length,
+      learnAges: D.AGES.map((a, i) => ({ short: a.short, ...SEG((st.learnAge ?? kid.age) === i), onClick: () => this.setState({ learnAge: i }) })),
+      learnHito: D.AGES[st.learnAge ?? kid.age].hito, tips: D.STRATEGIES.flatMap(s => s.points).filter(p => p.length > 30),
+      usageProfileIcon: fam.usage === false ? 'ph ph-square' : 'ph-fill ph-check-square',
+      toggleUsageProfile: () => this.saveFam({ ...fam, usage: fam.usage === false }),
+      addKidFromProfile: () => this.setState({ screen: 'child', addingFromProfile: true, draftKids: [], draft: { name: '', age: null }, err: {} }),
+      logout: async () => { this.log('logout'); if (this.audio) { this.audio.pause(); this.audio.removeAttribute('src'); } this.setState({ nowId: null }); await B.signOut().catch(() => {}); this.setState({ fam: null, screen: 'welcome' }); },
+      deleteLabel: st.confirmDelete ? 'Toca de nuevo para eliminar todo definitivamente' : 'Eliminar mi cuenta y mis datos',
+      deleteAll: async () => {
+        if (!st.confirmDelete) return this.setState({ confirmDelete: true });
+        try { await B.deleteAccount(fam); this.setState({ fam: null, screen: 'welcome', confirmDelete: false }); this.flash('Tu cuenta y tus datos fueron eliminados.'); }
+        catch (e) { this.setState({ confirmDelete: false, err: { profile: B.msg(e) } }); }
+      },
+      cur, curChannel: cur.artist || '', isCancionero: cur.src === 'cancionero',
+      ...this.playerVals(cur),
+      curTags: [cur.ages.map(a => D.AGES[a].short).join(' · '), ...cur.purposes, ...cur.moments.map(mLabel)],
+      curSteps: (cur.steps || []).map((t, i) => ({ n: i + 1, text: t })),
+      strat: { n: strat.n, title: strat.title, point: strat.points[cur.id.length % strat.points.length] },
+      wordChips: (cur.words || []).map(w => { const said = kidWords.some(x => x.word.toLowerCase() === w.toLowerCase());
+        return { word: w, icon: said ? 'ph-check' : 'ph-plus', ...(said ? ON : OFF), onClick: () => addWord(w, cur.title) }; }),
+      favIcon: isFav ? 'ph-fill ph-heart' : 'ph ph-heart', favColor: isFav ? 'var(--color-accent-300)' : 'var(--color-text)',
+      toggleFav: () => { this.saveFam({ ...fam, favs: isFav ? favs.filter(x => x !== cur.id) : [...favs, cur.id] }); this.log(isFav ? 'unfav' : 'fav', { song: cur.id }); },
+      goBack: () => this.go(st.prev || 'home'),
+      nextSongs: cat.filter(s => s.id !== cur.id && s.ages.includes(kid.age) && s.moments.some(m => cur.moments.includes(m))).slice(0, 3).map(s => this.row(s, favs)),
+      hasNext: true,
+      tabs: tabDefs.map(([k, label, ic]) => ({ label, icon: scr === k ? `ph-fill ph-${ic}` : `ph ph-${ic}`, color: scr === k ? 'var(--color-accent-300)' : 'var(--color-neutral-500)', onClick: () => this.go(k) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

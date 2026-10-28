@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cantito · Panel</title>
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="ds/styles.css">
+<script src="ds/ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<script src="cantito-config.js"></script>
+<script src="cantito-web-data.js"></script>
+<script src="cantito-canciones.js"></script>
+<script src="cantito-backend.js"></script>
+<style>body{margin:0;background:var(--color-bg)}a{color:var(--color-accent-300)}a:hover{color:var(--color-accent-200)}</style>
+</helmet>
+<div style="min-height:100vh;background:radial-gradient(100% 50% at 0% 0%, var(--color-accent-900) 0%, var(--color-bg) 60%);font-family:var(--font-body);color:var(--color-text)">
+  <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ true }}">
+    <div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:var(--color-neutral-400);font-size:14px">Cargando datos…</div>
+  </sc-if>
+
+  <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:380px;margin:0 auto;padding:96px 24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--color-accent-300)"><i class="ph ph-music-notes-simple" style="font-size:20px"></i><span style="font-size:15px;font-weight:500">Cantito · Panel</span></div>
+      <h1 style="font-size:28px;margin:0">Entrar al panel</h1>
+      <div class="field" style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;color:var(--color-neutral-400)">Correo de administrador</label><input class="input" type="email" value="{{ email }}" onChange="{{ onEmail }}" style="height:44px"></div>
+      <div class="field" style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;color:var(--color-neutral-400)">Contraseña</label><input class="input" type="password" value="{{ pass }}" onChange="{{ onPass }}" style="height:44px"></div>
+      <span style="font-size:12px;color:var(--color-accent-300)">{{ err }}</span>
+      <button class="btn btn-primary btn-block" onClick="{{ doLogin }}" style="height:44px">Entrar</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isReady }}" hint-placeholder-val="{{ false }}">
+    <header style="position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between;padding:14px 32px;background:color-mix(in srgb, var(--color-bg) 85%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--color-divider)">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;color:var(--color-accent-300)"><i class="ph ph-music-notes-simple" style="font-size:20px"></i><span style="font-size:15px;font-weight:500">Cantito</span><span style="color:var(--color-neutral-500);font-size:13px">· Panel</span></div>
+        <nav style="display:flex;gap:4px;flex-wrap:wrap">
+          <a href="#resumen" style="font-size:13px;padding:8px 10px;color:var(--color-neutral-300);text-decoration:none">Resumen</a>
+          <a href="#impacto" style="font-size:13px;padding:8px 10px;color:var(--color-neutral-300);text-decoration:none">Impacto</a>
+          <a href="#canciones" style="font-size:13px;padding:8px 10px;color:var(--color-neutral-300);text-decoration:none">Más escuchadas</a>
+          <a href="#familias" style="font-size:13px;padding:8px 10px;color:var(--color-neutral-300);text-decoration:none">Familias</a>
+          <a href="#catalogo" style="font-size:13px;padding:8px 10px;color:var(--color-neutral-300);text-decoration:none">Canciones</a>
+        </nav>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden">
+          <sc-for list="{{ ranges }}" as="r" hint-placeholder-count="3">
+            <button onClick="{{ r.onClick }}" style="height:36px;padding:0 14px;border:0;background:{{ r.bg }};color:{{ r.fg }};font:500 13px var(--font-body);cursor:pointer;box-shadow:inset 0 -2px 0 {{ r.bd }}">{{ r.label }}</button>
+          </sc-for>
+        </div>
+        <button class="btn btn-secondary" onClick="{{ reload }}" style="height:36px"><i class="ph ph-arrows-clockwise"></i>Actualizar</button>
+        <button class="btn btn-primary" onClick="{{ exportCsv }}" style="height:36px"><i class="ph ph-download-simple"></i>Uso (CSV)</button>
+        <button class="btn btn-primary" onClick="{{ exportSurveys }}" style="height:36px"><i class="ph ph-download-simple"></i>Cuestionarios (CSV)</button>
+      </div>
+    </header>
+
+    <main style="max-width:1200px;margin:0 auto;padding:28px 32px 64px;display:flex;flex-direction:column;gap:40px">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--color-neutral-400);max-width:760px">
+          <i class="ph ph-info" style="font-size:18px;color:var(--color-accent-300);flex:none"></i>
+          <span style="text-wrap:pretty">{{ dataNote }}</span>
+        </div>
+        <button onClick="{{ toggleDemo }}" style="all:unset;cursor:pointer;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--color-neutral-300)"><i class="{{ demoIcon }}" style="font-size:20px;color:var(--color-accent-300)"></i>Incluir datos de ejemplo</button>
+      </div>
+
+      <section id="resumen" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:80px">
+        <h2 style="font-size:25px;margin:0">Resumen · {{ rangeLabel }}</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+              <span style="font-size:12px;color:var(--color-neutral-400)">{{ k.label }}</span>
+              <span style="font-size:30px;font-weight:500;line-height:1.1">{{ k.value }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-500)">{{ k.sub }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><span style="font-size:15px;font-weight:500">Familias activas por día</span><span style="font-size:12px;color:var(--color-neutral-500)">máx. {{ dailyMax }}</span></div>
+          <div style="height:140px;display:flex;align-items:flex-end;gap:2px">
+            <sc-for list="{{ daily }}" as="d" hint-placeholder-count="30">
+              <div title="{{ d.tip }}" style="flex:1;min-width:0;height:{{ d.h }};border-radius:2px 2px 0 0;background:{{ d.bg }}"></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-neutral-500)"><span>{{ dailyFrom }}</span><span>Hoy</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px">
+          <sc-for list="{{ breakdowns }}" as="b" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+              <span style="font-size:15px;font-weight:500">{{ b.title }}</span>
+              <sc-for list="{{ b.rows }}" as="r" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13px">
+                  <span style="color:var(--color-neutral-300);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.label }}</span>
+                  <div style="height:6px;border-radius:3px;background:var(--color-neutral-900)"><div style="height:100%;width:{{ r.pct }};border-radius:3px;background:var(--color-accent-500)"></div></div>
+                  <span style="text-align:right;color:var(--color-neutral-400);font-variant-numeric:tabular-nums">{{ r.share }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm);overflow-x:auto">
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:500">Retención semanal</span><span style="font-size:12px;color:var(--color-neutral-500)">% de familias de cada semana de registro que volvieron a usar la app</span></div>
+          <div style="display:grid;grid-template-columns:140px 70px repeat(6,minmax(56px,1fr));gap:3px;font-size:12px;min-width:620px">
+            <span style="color:var(--color-neutral-500);padding:6px 0">Semana de registro</span><span style="color:var(--color-neutral-500);padding:6px 0">Familias</span>
+            <sc-for list="{{ weekHeads }}" as="w" hint-placeholder-count="6"><span style="color:var(--color-neutral-500);padding:6px 0;text-align:center">{{ w }}</span></sc-for>
+            <sc-for list="{{ cohortCells }}" as="c" hint-placeholder-count="0">
+              <span style="padding:8px 4px;text-align:{{ c.align }};border-radius:var(--radius-sm);background:{{ c.bg }};color:{{ c.fg }};font-variant-numeric:tabular-nums">{{ c.text }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <section id="impacto" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:80px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:25px;margin:0">Impacto · cuestionarios</h2>
+          <span style="font-size:13px;color:var(--color-neutral-400);max-width:760px;text-wrap:pretty">La comparación usa solo niños con cuestionario inicial y final ({{ pairedN }}), para que los grupos sean los mismos. Todo el periodo, sin filtro de fechas.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+          <sc-for list="{{ svKpis }}" as="k" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+              <span style="font-size:12px;color:var(--color-neutral-400)">{{ k.label }}</span>
+              <span style="font-size:30px;font-weight:500;line-height:1.1">{{ k.value }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-500)">{{ k.sub }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasPaired }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:16px;font-size:12px;color:var(--color-neutral-400)">
+            <span style="display:flex;gap:6px;align-items:center"><span style="width:12px;height:6px;border-radius:3px;background:var(--color-neutral-600)"></span>Inicial</span>
+            <span style="display:flex;gap:6px;align-items:center"><span style="width:12px;height:6px;border-radius:3px;background:var(--color-accent)"></span>Final</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px">
+            <sc-for list="{{ compare }}" as="b" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+                <span style="font-size:15px;font-weight:500">{{ b.title }}</span>
+                <sc-for list="{{ b.rows }}" as="r" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) 72px;gap:10px;align-items:center;font-size:13px">
+                    <span style="color:var(--color-neutral-300)">{{ r.label }}</span>
+                    <div style="display:flex;flex-direction:column;gap:3px">
+                      <div style="height:5px;border-radius:3px;background:var(--color-neutral-900)"><div style="height:100%;width:{{ r.pa }};border-radius:3px;background:var(--color-neutral-600)"></div></div>
+                      <div style="height:5px;border-radius:3px;background:var(--color-neutral-900)"><div style="height:100%;width:{{ r.pb }};border-radius:3px;background:var(--color-accent)"></div></div>
+                    </div>
+                    <span style="text-align:right;color:var(--color-neutral-400);font-variant-numeric:tabular-nums">{{ r.txt }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <span style="font-size:15px;font-weight:500">Cambios que cuentan las familias</span>
+            <sc-for list="{{ comments }}" as="c" hint-placeholder-count="0">
+              <div style="display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span style="font-size:14px;text-wrap:pretty">«{{ c.text }}»</span><span style="font-size:12px;color:var(--color-neutral-500)">{{ c.meta }}</span></div>
+            </sc-for>
+            <sc-if value="{{ noComments }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--color-neutral-500)">Aún no hay comentarios.</span></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPaired }}" hint-placeholder-val="{{ true }}">
+          <p style="margin:0;font-size:14px;color:var(--color-neutral-400)">Aún no hay niños con ambos cuestionarios. El final se habilita {{ finalDays }} días después del inicial.</p>
+        </sc-if>
+      </section>
+
+      <section id="canciones" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:80px">
+        <h2 style="font-size:25px;margin:0">Canciones más escuchadas</h2>
+        <div style="overflow-x:auto;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)">
+          <table class="table" style="width:100%;min-width:620px">
+            <thead><tr><th>#</th><th>Canción</th><th>Origen</th><th style="text-align:right">Reproducciones</th><th style="text-align:right">Tiempo total</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ topSongs }}" as="s" hint-placeholder-count="8">
+                <tr><td style="color:var(--color-neutral-500)">{{ s.rank }}</td><td>{{ s.title }}</td><td><span class="tag {{ s.tagClass }}">{{ s.src }}</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">{{ s.plays }}</td><td style="text-align:right;font-variant-numeric:tabular-nums">{{ s.time }}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="familias" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:80px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:25px;margin:0">Familias</h2>
+          <span style="font-size:13px;color:var(--color-neutral-400)">Solo nombre del padre o madre, correo (enmascarado) y nombre y edad de cada hijo.</span>
+        </div>
+        <div style="overflow-x:auto;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)">
+          <table class="table" style="width:100%;min-width:880px">
+            <thead><tr><th>Padre / madre</th><th>Hijos</th><th>Correo</th><th>Registro</th><th>Última actividad</th><th>Cuestionarios</th><th style="text-align:right">Reproducciones</th><th style="text-align:right">Palabras</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ families }}" as="f" hint-placeholder-count="10">
+                <tr><td>{{ f.parent }}</td><td style="color:var(--color-neutral-300)">{{ f.kids }}</td><td style="color:var(--color-neutral-400)">{{ f.email }}</td><td style="color:var(--color-neutral-400)">{{ f.reg }}</td><td style="color:var(--color-neutral-400)">{{ f.last }}</td><td style="color:var(--color-neutral-400)">{{ f.sv }}</td><td style="text-align:right;font-variant-numeric:tabular-nums">{{ f.plays }}</td><td style="text-align:right;font-variant-numeric:tabular-nums">{{ f.words }}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <span style="font-size:12px;color:var(--color-neutral-500)">{{ familiesNote }}</span>
+      </section>
+
+      <section id="catalogo" style="display:flex;flex-direction:column;gap:16px;scroll-margin-top:80px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="font-size:25px;margin:0">Canciones</h2>
+          <span style="font-size:13px;color:var(--color-neutral-400);max-width:760px;text-wrap:pretty">Sube el MP3 de cada canción y asígnale edad, propósito y momento del día: con eso aparece en los filtros de la app. Solo las canciones publicadas llegan a las familias.</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <input class="input" value="{{ q }}" onChange="{{ onQ }}" placeholder="Buscar por título o intérprete" style="height:36px;flex:1 1 240px;min-width:0;max-width:360px;font-size:13px">
+          <div style="display:flex;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden">
+            <sc-for list="{{ filts }}" as="r" hint-placeholder-count="4">
+              <button onClick="{{ r.onClick }}" style="height:36px;padding:0 12px;border:0;background:{{ r.bg }};color:{{ r.fg }};font:500 13px var(--font-body);cursor:pointer;box-shadow:inset 0 -2px 0 {{ r.bd }}">{{ r.label }}</button>
+            </sc-for>
+          </div>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" onClick="{{ newSong }}" style="height:36px"><i class="ph ph-plus"></i>Nueva canción</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ songCounts }}" as="c" hint-placeholder-count="4"><span class="tag {{ c.cls }}">{{ c.text }}</span></sc-for>
+        </div>
+        <sc-if value="{{ songsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <span style="font-size:14px;color:var(--color-neutral-300);max-width:560px;text-wrap:pretty">Aún no hay canciones. Puedes importar las del cancionero y la lista base ya caracterizadas, como borradores sin audio, y luego subir el MP3 de cada una.</span>
+            <button class="btn btn-secondary" onClick="{{ importBase }}" style="height:36px">{{ importLabel }}</button>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <sc-for list="{{ songRows }}" as="s" hint-placeholder-count="0">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--color-divider)">
+              <span style="width:44px;height:44px;border-radius:var(--radius-sm);flex:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(90% 90% at 80% 10%, var(--color-accent-800), var(--color-neutral-900));color:var(--color-accent-200)"><i class="ph {{ s.icon }}" style="font-size:20px"></i></span>
+              <div style="flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:14px;font-weight:500">{{ s.title }}</span>
+                <span style="font-size:12px;color:var(--color-neutral-500)">{{ s.meta }}</span>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;flex:0 1 300px">
+                <sc-for list="{{ s.tags }}" as="t" hint-placeholder-count="2"><span class="tag tag-neutral">{{ t }}</span></sc-for>
+              </div>
+              <span class="tag {{ s.tagClass }}" style="flex:none">{{ s.status }}</span>
+              <button class="btn btn-secondary" onClick="{{ s.onEdit }}" style="height:36px"><i class="ph ph-pencil-simple"></i>Editar</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noSongRows }}" hint-placeholder-val="{{ false }}"><span style="padding:16px;font-size:13px;color:var(--color-neutral-500)">Ninguna canción con ese filtro.</span></sc-if>
+        </div>
+      </section>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ hasEd }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" onClick="{{ closeEd }}" style="position:fixed;inset:0;z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:24px;overflow-y:auto">
+      <div class="dialog" onClick="{{ stop }}" style="width:min(760px,100%);max-width:none;display:flex;flex-direction:column;gap:20px;margin:auto 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="dialog-title" style="margin:0">{{ edTitle }}</span><button class="btn btn-ghost btn-icon" onClick="{{ closeEd }}" aria-label="Cerrar"><i class="ph ph-x"></i></button></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;color:var(--color-neutral-400)">Archivo de audio (MP3)</span>
+          <sc-if value="{{ isFolder }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+              <span style="font-size:13px;color:var(--color-neutral-400)">audio/</span>
+              <input class="input" value="{{ edFile }}" onChange="{{ onEdFile }}" placeholder="pin-pon.mp3" style="height:36px;flex:1 1 220px;min-width:0;max-width:320px">
+              <button class="btn btn-secondary" onClick="{{ checkFile }}" style="height:36px"><i class="ph ph-check-circle"></i>Comprobar</button>
+            </div>
+            <span style="font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">Copia el MP3 a la carpeta audio/ del sitio y publícalo; luego escribe aquí el nombre exacto del archivo y toca Comprobar.</span>
+          </sc-if>
+          <sc-if value="{{ isUpload }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+              <label class="btn btn-secondary" style="height:36px;cursor:pointer"><i class="ph ph-upload-simple"></i>{{ upLabel }}<input type="file" accept="audio/mpeg,audio/mp3,audio/*" onChange="{{ onFile }}" style="display:none"></label>
+            </div>
+          </sc-if>
+          <span style="font-size:13px;color:var(--color-neutral-400)">{{ edDur }}</span>
+          <sc-if value="{{ hasEdAudio }}" hint-placeholder-val="{{ false }}"><audio controls="true" src="{{ edSrc }}" style="width:100%;height:40px"></audio></sc-if>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--color-neutral-400)">Título</span><input class="input" value="{{ ed.title }}" onChange="{{ onEdTitle }}" style="height:40px"></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--color-neutral-400)">Intérprete o versión (opcional)</span><input class="input" value="{{ ed.artist }}" onChange="{{ onEdArtist }}" placeholder="ej. Versania Nova" style="height:40px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--color-neutral-400)">Origen</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ edSrcOpts }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onClick }}" style="min-height:36px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer">{{ c.label }}</button></sc-for></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--color-neutral-400)">Edad (una o varias)</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ edAges }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onClick }}" style="min-height:36px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer">{{ c.label }}</button></sc-for></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--color-neutral-400)">Propósito</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ edPurposes }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onClick }}" style="min-height:36px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer"><i class="ph {{ c.icon }}" style="font-size:15px"></i>{{ c.label }}</button></sc-for></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--color-neutral-400)">Momento del día</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ edMoments }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onClick }}" style="min-height:36px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer"><i class="ph {{ c.icon }}" style="font-size:15px"></i>{{ c.label }}</button></sc-for></div></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--color-neutral-400)">Qué estimula</span><textarea class="input" value="{{ ed.goal }}" onChange="{{ onEdGoal }}" rows="2" style="padding:10px;resize:vertical"></textarea></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--color-neutral-400)">Cómo cantarla juntos (un paso por línea)</span><textarea class="input" value="{{ ed.stepsText }}" onChange="{{ onEdSteps }}" rows="3" style="padding:10px;resize:vertical"></textarea></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--color-neutral-400)">Palabras para practicar (separadas por coma)</span><input class="input" value="{{ ed.wordsText }}" onChange="{{ onEdWords }}" placeholder="vaca, muu, cola" style="height:40px"></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--color-neutral-400)">Comentario que se muestra</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ edStrats }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onClick }}" style="min-height:36px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;background:{{ c.bg }};border:1px solid {{ c.bd }};color:{{ c.fg }};font:500 13px var(--font-body);cursor:pointer">{{ c.label }}</button></sc-for></div></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--color-neutral-400)">Letra (opcional)</span><textarea class="input" value="{{ ed.lyrics }}" onChange="{{ onEdLyrics }}" rows="5" style="padding:10px;resize:vertical"></textarea></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button onClick="{{ toggleRights }}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;font-size:14px"><i class="{{ rightsIcon }}" style="font-size:22px;color:var(--color-accent-300);flex:none"></i><span>Tenemos derecho a usar esta grabación: es propia, de dominio público o con licencia.</span></button>
+          <button onClick="{{ togglePub }}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;font-size:14px"><i class="{{ pubIcon }}" style="font-size:22px;color:var(--color-accent-300);flex:none"></i><span>Publicada (visible para las familias)</span></button>
+          <span style="font-size:12px;color:var(--color-neutral-500)">{{ edMissing }}</span>
+          <span style="font-size:13px;color:var(--color-accent-300)">{{ edErr }}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <button class="btn btn-ghost" onClick="{{ delEd }}" style="height:40px">{{ delLabel }}</button>
+          <span style="flex:1"></span>
+          <button class="btn btn-secondary" onClick="{{ closeEd }}" style="height:40px">Cancelar</button>
+          <button class="btn btn-primary" onClick="{{ saveEd }}" style="height:40px">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const DAY = 864e5;
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const NAMES = ['Ana','Carolina','Luis','María','Andrés','Paula','Juliana','Diego','Natalia','Camilo','Laura','Sofía','Jorge','Valentina','Daniela','Felipe','Marcela','Juan','Lina','Sebastián','Catalina','Mónica','Alejandro','Diana'];
+const KIDS = ['Lucía','Tomás','Emma','Samuel','Mateo','Isabella','Martín','Salomé','Jacobo','Antonella','Emilio','Valeria','Simón','Mariana','Matías','Sara'];
+const COMMENTS = ['Ahora pide la canción de la pulga y completa las palabras.', 'Dice «muu» y «pío» cuando ve los animales.', 'Cantamos en el baño todos los días, antes lloraba.', 'Empezó a decir «arriba» y «abajo» al vestirse.', 'Usa más gestos para pedir lo que quiere.', 'Nos ayudó a tener una rutina para dormir.'];
+const fmt = t => new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+const mask = e => { if (!e) return '—'; const [u, d] = e.split('@'); return u.slice(0, 2) + '•••@' + d; };
+const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+const hm = s => s >= 3600 ? (s / 3600).toFixed(1).replace('.', ',') + ' h' : Math.round(s / 60) + ' min';
+const fmtDur = s => s ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '';
+const audioDur = f => new Promise(res => { const a = new Audio(), u = URL.createObjectURL(f); a.preload = 'metadata'; a.onloadedmetadata = () => { res(Math.round(a.duration) || 0); URL.revokeObjectURL(u); }; a.onerror = () => res(0); a.src = u; });
+const ON = { bg: 'var(--color-accent-900)', bd: 'var(--color-accent)', fg: 'var(--color-accent-200)' };
+const OFF = { bg: 'var(--color-surface)', bd: 'var(--color-neutral-800)', fg: 'var(--color-neutral-300)' };
+const SEGc = on => ({ bg: on ? 'var(--color-accent-900)' : 'var(--color-surface)', fg: on ? 'var(--color-accent-200)' : 'var(--color-neutral-400)', bd: on ? 'var(--color-accent)' : 'transparent' });
+const csvDl = (rows, name) => { const csv = rows.map(r => r.map(x => `"${String(x ?? '').replace(/"/g, '""')}"`).join(',')).join('\n'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' })); a.download = name; a.click(); };
+
+class Component extends DCLogic {
+  state = { phase: 'loading', email: '', pass: '', err: '', range: 30, fams: [], ev: [], songs: [], demo: false, q: '', filt: 'todas', ed: null, edSrc: '', upPct: null, edErr: '', confirmDel: false, busy: false };
+  componentDidMount() {
+    const init = () => {
+      if (!window.CantitoData || !window.CantitoBackend) return setTimeout(init, 50);
+      this.D = window.CantitoData; this.B = window.CantitoBackend;
+      this.B.adminCurrent().then(e => e ? this.load() : this.setState({ phase: 'login' })).catch(() => this.setState({ phase: 'login' }));
+    };
+    init();
+  }
+  load() {
+    this.setState({ phase: 'loading' });
+    Promise.all([this.B.adminLoad(), this.B.listSongs(true)]).then(([d, songs]) => {
+      const demo = this.B.mode === 'local' && !d.families.length;
+      this.setState({ phase: 'ready', fams: d.families, ev: d.events, songs, demo: this.state.phase === 'ready' ? this.state.demo : demo });
+    }).catch(e => this.setState({ phase: 'login', err: 'No se pudieron leer los datos. Revisa las reglas de Firestore y que tu correo esté en la lista de administradores.' }));
+  }
+  seed() {
+    if (this._seed) return this._seed;
+    const D = this.D, r = rng(20261024), now = Date.now(), fams = [], ev = [];
+    const songs = D.SONGS.filter(s => s.yt), opt = id => D.SURVEY.inicial.find(q => q.id === id).options;
+    for (let i = 0; i < 120; i++) {
+      const reg = now - Math.floor(Math.pow(r(), 0.8) * 90) * DAY - Math.floor(r() * DAY);
+      const nk = r() < 0.3 ? 2 : 1, kids = [];
+      for (let k = 0; k < nk; k++) {
+        const age = Math.min(4, Math.floor(r() * 5)), kid = { id: 'dk' + i + k, name: KIDS[Math.floor(r() * KIDS.length)], age, surveys: {} };
+        if (r() < 0.85) {
+          const pi = Math.min(4, Math.max(0, age + Math.floor(r() * 2) - 1)), a = { palabras: opt('palabras')[pi], combina: opt('combina')[Math.min(2, Math.floor(age / 2 + r()))], frecuencia: opt('frecuencia')[Math.floor(r() * 3)], pantalla: opt('pantalla')[Math.floor(r() * 4)], confianza: 1 + Math.floor(r() * 4) };
+          kid.surveys.inicial = { a, t: reg };
+          if (reg < now - 28 * DAY && r() < 0.6) {
+            const up = (list, v, p) => list[Math.min(list.length - 1, list.indexOf(v) + (r() < p ? 1 : 0))], down = (list, v) => list[Math.max(0, list.indexOf(v) - (r() < 0.35 ? 1 : 0))];
+            kid.surveys.final = { t: reg + 30 * DAY, a: { palabras: up(opt('palabras'), a.palabras, 0.5), combina: up(opt('combina'), a.combina, 0.35), frecuencia: up(opt('frecuencia'), a.frecuencia, 0.6), pantalla: down(opt('pantalla'), a.pantalla), confianza: Math.min(5, a.confianza + (r() < 0.6 ? 1 : 0)), utilidad: 3 + Math.floor(r() * 3), cambios: r() < 0.4 ? COMMENTS[Math.floor(r() * COMMENTS.length)] : '' } };
+          }
+        }
+        kids.push(kid);
+      }
+      const parent = NAMES[Math.floor(r() * NAMES.length)];
+      const f = { id: 'demo' + i, parent, email: parent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') + Math.floor(r() * 90 + 10) + '@gmail.com', kids, reg, words: [] };
+      fams.push(f); ev.push({ t: reg, fam: f.id, type: 'register', kidAge: kids[0].age });
+      let q = 0.1 + r() * 0.55; const decay = 0.97 + r() * 0.03;
+      for (let d = reg; d < now; d += DAY) {
+        if (r() < q) {
+          const kidAge = kids[Math.floor(r() * nk)].age, n = 1 + Math.floor(r() * 3);
+          for (let j = 0; j < n; j++) {
+            const s = songs[Math.floor(r() * songs.length)], t = d + Math.floor(r() * DAY * 0.6) + j * 240000; if (t > now) break;
+            const sec = 40 + Math.floor(r() * 180);
+            ev.push({ t, fam: f.id, kidAge, type: 'play', song: s.id, moment: s.moments[Math.floor(r() * s.moments.length)], purposes: s.purposes });
+            ev.push({ t: t + sec * 1000, fam: f.id, kidAge, type: 'play_time', song: s.id, sec });
+            if (r() < 0.12) ev.push({ t: t + sec * 1000, fam: f.id, kidAge, type: 'word_add', word: s.words[0], song: s.title });
+          }
+        }
+        q *= decay;
+      }
+    }
+    return this._seed = { fams, ev };
+  }
+  renderVals() {
+    const D = this.D, B = this.B, st = this.state;
+    const base = { isLoading: st.phase === 'loading', isLogin: st.phase === 'login', isReady: st.phase === 'ready', email: st.email, pass: st.pass, err: st.err,
+      onEmail: e => this.setState({ email: e.target.value }), onPass: e => this.setState({ pass: e.target.value }),
+      doLogin: async () => { try { await B.adminSignIn(st.email, st.pass); this.setState({ err: '' }); this.load(); } catch (e) { this.setState({ err: B.msg(e) }); } },
+      ranges: [], filts: [], songRows: [], songCounts: [], edSrcOpts: [], edAges: [], edPurposes: [], edMoments: [], edStrats: [], hasEd: false, ed: {}, kpis: [], daily: [], breakdowns: [], weekHeads: [], cohortCells: [], topSongs: [], families: [], catRows: [], catCounts: [], svKpis: [], compare: [], comments: [], hasPreview: false };
+    if (!D || st.phase !== 'ready') return base;
+    const now = Date.now(), from = now - st.range * DAY;
+    const sd = st.demo ? this.seed() : { fams: [], ev: [] };
+    const fams = [...st.fams, ...sd.fams], evAll = [...st.ev, ...sd.ev];
+    const ev = evAll.filter(e => e.t >= from);
+    const plays = ev.filter(e => e.type === 'play'), times = ev.filter(e => e.type === 'play_time'), words = ev.filter(e => e.type === 'word_add');
+    const activeIn = (a, b) => new Set(evAll.filter(e => e.t >= a && e.t < b && e.type !== 'register').map(e => e.fam));
+    const act7 = activeIn(now - 7 * DAY, now + 1).size, actR = activeIn(from, now + 1).size;
+    const totalSec = times.reduce((a, e) => a + (e.sec || 0), 0);
+    const newFams = fams.filter(f => (f.reg || 0) >= from).length;
+    const wk = 7 * DAY, weekStart = now - 6 * wk, cohortCells = [];
+    for (let c = 0; c < 6; c++) {
+      const a = weekStart + c * wk, b = a + wk, members = fams.filter(f => f.reg >= a && f.reg < b).map(f => f.id);
+      cohortCells.push({ text: fmt(a), align: 'left', bg: 'transparent', fg: 'var(--color-neutral-300)' }, { text: String(members.length), align: 'left', bg: 'transparent', fg: 'var(--color-neutral-400)' });
+      for (let w = 0; w < 6; w++) {
+        const s = a + w * wk;
+        if (s > now) { cohortCells.push({ text: '', align: 'center', bg: 'transparent', fg: 'transparent' }); continue; }
+        const actv = activeIn(s, s + wk), n = members.filter(m => actv.has(m)).length, v = members.length ? n / members.length : 0;
+        cohortCells.push({ text: members.length ? Math.round(v * 100) + '%' : '—', align: 'center', bg: `color-mix(in srgb, var(--color-accent-500) ${Math.round(v * 70)}%, var(--color-neutral-900))`, fg: v > 0.45 ? 'var(--color-accent-100)' : 'var(--color-neutral-300)' });
+      }
+    }
+    const elig = fams.filter(f => f.reg < now - 14 * DAY);
+    const w1 = pct(elig.filter(f => evAll.some(e => e.fam === f.id && e.type === 'play' && e.t >= f.reg + 7 * DAY && e.t < f.reg + 14 * DAY)).length, elig.length);
+    const days = []; let max = 1;
+    for (let i = st.range - 1; i >= 0; i--) { const a = new Date(now - i * DAY); a.setHours(0, 0, 0, 0); const n = activeIn(+a, +a + DAY).size; max = Math.max(max, n); days.push({ n, t: +a, today: i === 0 }); }
+    const countBy = (arr, fn, labels) => { const m = {}; arr.forEach(e => [].concat(fn(e)).forEach(k => { if (k != null) m[k] = (m[k] || 0) + 1; })); const tot = Object.values(m).reduce((a, b) => a + b, 0) || 1, mx = Math.max(1, ...Object.values(m));
+      return labels.map(([k, l]) => ({ label: l, n: m[k] || 0 })).map(x => ({ label: x.label, pct: x.n / mx * 100 + '%', share: Math.round(x.n / tot * 100) + '%' })); };
+    const bySong = {}; plays.forEach(e => { (bySong[e.song] = bySong[e.song] || { plays: 0, sec: 0 }).plays++; });
+    times.forEach(e => { (bySong[e.song] = bySong[e.song] || { plays: 0, sec: 0 }).sec += e.sec || 0; });
+    const lastOf = {}, playsOf = {}, wordsOf = {};
+    evAll.forEach(e => { lastOf[e.fam] = Math.max(lastOf[e.fam] || 0, e.t); if (e.type === 'play') playsOf[e.fam] = (playsOf[e.fam] || 0) + 1; if (e.type === 'word_add') wordsOf[e.fam] = (wordsOf[e.fam] || 0) + 1; });
+    // surveys
+    const kidsAll = fams.flatMap(f => (f.kids || []).map(k => ({ ...k, famId: f.id, parent: f.parent })));
+    const ini = kidsAll.filter(k => k.surveys && k.surveys.inicial), fin = kidsAll.filter(k => k.surveys && k.surveys.final);
+    const paired = fin.filter(k => k.surveys.inicial);
+    const avg = (arr, f) => arr.length ? (arr.reduce((a, k) => a + (+f(k) || 0), 0) / arr.length).toFixed(1).replace('.', ',') : '—';
+    const compare = D.SURVEY.inicial.map(q => {
+      if (q.type === 'scale') {
+        const a = avg(paired, k => k.surveys.inicial.a[q.id]), b = avg(paired, k => k.surveys.final.a[q.id]);
+        const na = parseFloat(String(a).replace(',', '.')) || 0, nb = parseFloat(String(b).replace(',', '.')) || 0;
+        return { title: q.short + ' (promedio de 1 a 5)', rows: [{ label: 'Promedio', pa: na / 5 * 100 + '%', pb: nb / 5 * 100 + '%', txt: `${a} → ${b}` }] };
+      }
+      return { title: q.short, rows: q.options.map(o => { const a = paired.filter(k => k.surveys.inicial.a[q.id] === o).length, b = paired.filter(k => k.surveys.final.a[q.id] === o).length;
+        return { label: o, pa: (paired.length ? a / paired.length * 100 : 0) + '%', pb: (paired.length ? b / paired.length * 100 : 0) + '%', txt: `${pct(a, paired.length)} → ${pct(b, paired.length)}` }; }) };
+    });
+    const ord = (q, v) => D.SURVEY.inicial.find(x => x.id === q).options.indexOf(v);
+    const improved = paired.filter(k => ord('palabras', k.surveys.final.a.palabras) > ord('palabras', k.surveys.inicial.a.palabras)).length;
+    const comments = fin.filter(k => k.surveys.final.a.cambios).sort((a, b) => b.surveys.final.t - a.surveys.final.t).slice(0, 8).map(k => ({ text: k.surveys.final.a.cambios, meta: `${k.parent} · ${k.name} (${D.AGES[k.age].short}) · ${fmt(k.surveys.final.t)}` }));
+    const songs = st.songs.slice().sort((a, b) => (a.title || '').localeCompare(b.title || '', 'es'));
+    const stOf = s => !s.audioUrl ? 'sin audio' : s.published ? 'publicada' : 'borrador';
+    const qq = st.q.trim().toLowerCase();
+    const shown = songs.filter(s => (!qq || (s.title || '').toLowerCase().includes(qq) || (s.artist || '').toLowerCase().includes(qq)) && (st.filt === 'todas' || stOf(s) === st.filt));
+    const cnt = k => songs.filter(s => stOf(s) === k).length;
+    const reloadSongs = () => B.listSongs(true).then(sg => this.setState({ songs: sg }));
+    const blank = { id: '', title: '', artist: '', src: 'cancionero', ages: [], purposes: [], moments: [], goal: '', stepsText: '', wordsText: '', strat: 4, lyrics: '', audioUrl: '', audioPath: '', dur: 0, published: false, rights: false };
+    const openEd = async s => {
+      const ed = s ? { ...blank, ...s, fileName: (s.audioUrl || '').startsWith('audio/') ? s.audioUrl.slice(6) : '', stepsText: (s.steps || []).join('\n'), wordsText: (s.words || []).join(', ') } : { ...blank, id: 'c-' + Date.now().toString(36) };
+      this.setState({ ed, edSrc: '', edErr: '', upPct: null, confirmDel: false });
+      if (ed.audioUrl) this.setState({ edSrc: await B.resolveAudio(ed.audioUrl) });
+    };
+    const ed = st.ed;
+    const folder = ((window.CANTITO_CONFIG || {}).audioMode || 'carpeta') !== 'firebase';
+    const setEd = patch => this.setState({ ed: { ...this.state.ed, ...patch }, edErr: '' });
+    const togg = (k, v) => setEd({ [k]: ed[k].includes(v) ? ed[k].filter(x => x !== v) : [...ed[k], v] });
+    const missing = ed ? [!ed.title.trim() && 'título', !ed.audioUrl && 'archivo de audio', !ed.ages.length && 'edad', !ed.purposes.length && 'propósito', !ed.moments.length && 'momento del día', !ed.rights && 'confirmar los derechos'].filter(Boolean) : [];
+    const rl = { 7: 'últimos 7 días', 30: 'últimos 30 días', 90: 'últimos 90 días' }[st.range];
+    const svText = k => (k.surveys && k.surveys.inicial ? 'I' : '–') + ' / ' + (k.surveys && k.surveys.final ? 'F' : '–');
+    return { ...base,
+      ranges: [7, 30, 90].map(n => { const on = st.range === n; return { label: n + ' días', bg: on ? 'var(--color-accent-900)' : 'var(--color-surface)', fg: on ? 'var(--color-accent-200)' : 'var(--color-neutral-400)', bd: on ? 'var(--color-accent)' : 'transparent', onClick: () => this.setState({ range: n }) }; }),
+      rangeLabel: rl, reload: () => this.load(),
+      demoIcon: st.demo ? 'ph-fill ph-check-square' : 'ph ph-square', toggleDemo: () => this.setState({ demo: !st.demo }),
+      dataNote: (B.mode === 'firebase' ? `Conectado a Firebase: ${st.fams.length} familias reales y ${st.ev.length} eventos.` : `Modo de prueba: ${st.fams.length} familias y ${st.ev.length} eventos guardados en este navegador.`) + (st.demo ? ' Incluye 120 familias de ejemplo; desactívalas para ver solo datos reales.' : ''),
+      kpis: [
+        { label: 'Familias registradas', value: fams.length.toLocaleString('es'), sub: `+${newFams} en ${rl}` },
+        { label: 'Familias activas', value: actR.toLocaleString('es'), sub: `${act7} en los últimos 7 días` },
+        { label: 'Reproducciones', value: plays.length.toLocaleString('es'), sub: actR ? `${(plays.length / actR).toFixed(1).replace('.', ',')} por familia activa` : '' },
+        { label: 'Tiempo de reproducción', value: hm(totalSec), sub: 'tiempo escuchado' },
+        { label: 'Palabras nuevas', value: words.length.toLocaleString('es'), sub: 'registradas por las familias' },
+        { label: 'Retención semana 1', value: w1, sub: 'volvieron entre los días 7 y 14' },
+      ],
+      daily: days.map(d => ({ h: Math.max(2, d.n / max * 100) + '%', bg: d.today ? 'var(--color-accent)' : 'var(--color-accent-700)', tip: `${fmt(d.t)}: ${d.n} familias` })), dailyMax: max, dailyFrom: fmt(days[0].t),
+      breakdowns: [
+        { title: 'Por edad del niño', rows: countBy(plays, e => e.kidAge, D.AGES.map((a, i) => [i, a.label])) },
+        { title: 'Por momento del día', rows: countBy(plays, e => e.moment, D.MOMENTS.map(m => [m.key, m.label])) },
+        { title: 'Por propósito', rows: countBy(plays, e => e.purposes, D.PURPOSES.map(p => [p.label, p.label])) },
+      ],
+      weekHeads: ['Sem 0', 'Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'], cohortCells,
+      pairedN: paired.length, hasPaired: paired.length > 0, noPaired: !paired.length, finalDays: (window.CANTITO_CONFIG || {}).finalAfterDays ?? 28,
+      svKpis: [
+        { label: 'Niños registrados', value: String(kidsAll.length), sub: `${fams.length} familias` },
+        { label: 'Cuestionario inicial', value: String(ini.length), sub: pct(ini.length, kidsAll.length) + ' de los niños' },
+        { label: 'Cuestionario final', value: String(fin.length), sub: pct(fin.length, ini.length) + ' de quienes hicieron el inicial' },
+        { label: 'Subieron de rango de palabras', value: pct(improved, paired.length), sub: `${improved} de ${paired.length} niños` },
+        { label: 'Utilidad de Cantito', value: avg(fin, k => k.surveys.final.a.utilidad), sub: 'promedio de 1 a 5' },
+      ],
+      compare, comments, noComments: !comments.length,
+      topSongs: Object.entries(bySong).sort((a, b) => b[1].plays - a[1].plays).slice(0, 10).map(([id, b], i) => { const s = st.songs.find(x => x.id === id) || D.SONGS.find(x => x.id === id) || { title: id, src: '' };
+        return { rank: i + 1, title: s.title, src: s.src === 'cancionero' ? 'Cancionero' : 'Otra fuente', tagClass: s.src === 'cancionero' ? 'tag-accent' : 'tag-neutral', plays: b.plays.toLocaleString('es'), time: hm(b.sec) }; }),
+      families: fams.slice().sort((a, b) => (lastOf[b.id] || 0) - (lastOf[a.id] || 0)).slice(0, 15).map(f => ({
+        parent: f.parent, kids: (f.kids || []).map(k => `${k.name} (${D.AGES[k.age].short})`).join(', '), email: mask(f.email), reg: fmt(f.reg || now), last: lastOf[f.id] ? fmt(lastOf[f.id]) : '—',
+        sv: (f.kids || []).map(svText).join(', '), plays: playsOf[f.id] || 0, words: (f.words || []).length || wordsOf[f.id] || 0 })),
+      familiesNote: `Mostrando ${Math.min(15, fams.length)} de ${fams.length}, por última actividad. Cuestionarios: I = inicial, F = final.`,
+      songRows: shown.map(s => ({ title: s.title || '(sin título)', meta: [s.artist || (s.src === 'cancionero' ? 'Cancionero' : ''), fmtDur(s.dur), (s.ages || []).map(a => D.AGES[a].short).join(' · '), (s.moments || []).map(m => (D.MOMENTS.find(x => x.key === m) || {}).label).join(', ')].filter(Boolean).join(' · '),
+        tags: (s.purposes || []).slice(0, 3), status: stOf(s)[0].toUpperCase() + stOf(s).slice(1), tagClass: stOf(s) === 'publicada' ? 'tag-accent' : stOf(s) === 'borrador' ? 'tag-outline' : 'tag-neutral',
+        icon: s.audioUrl ? 'ph-waveform' : 'ph-file-dashed', onEdit: () => openEd(s) })),
+      noSongRows: !shown.length && songs.length > 0, songsEmpty: !songs.length,
+      songCounts: [{ text: `${cnt('publicada')} publicadas`, cls: 'tag-accent' }, { text: `${cnt('borrador')} borradores`, cls: 'tag-outline' }, { text: `${cnt('sin audio')} sin audio`, cls: 'tag-neutral' }, { text: `${songs.length} en total · meta 50`, cls: 'tag-neutral' }],
+      q: st.q, onQ: e => this.setState({ q: e.target.value }),
+      filts: [['todas', 'Todas'], ['publicada', 'Publicadas'], ['borrador', 'Borradores'], ['sin audio', 'Sin audio']].map(([k, l]) => ({ label: l, ...SEGc(st.filt === k), onClick: () => this.setState({ filt: k }) })),
+      newSong: () => openEd(null),
+      importLabel: st.busy ? 'Importando…' : `Importar ${(window.CANTITO_SEED || []).length} canciones del cancionero`,
+      importBase: async () => {
+        if (st.busy) return; this.setState({ busy: true });
+        try { for (const s of (window.CANTITO_SEED || [])) { if (st.songs.some(x => x.id === s.id)) continue; await B.saveSong({ id: s.id, title: s.title, artist: '', src: s.src, ages: s.ages, purposes: s.purposes, moments: s.moments, goal: s.goal, steps: s.steps, words: s.words, strat: s.strat, lyrics: '', audioUrl: '', audioPath: '', dur: 0, published: false, rights: false, updated: Date.now() }); } await reloadSongs(); }
+        catch (e) { alert('No se pudo importar: ' + B.msg(e)); }
+        this.setState({ busy: false });
+      },
+      hasEd: !!ed, ed: ed || blank, edTitle: ed && st.songs.some(s => s.id === ed.id) ? 'Editar canción' : 'Nueva canción',
+      onEdTitle: e => setEd({ title: e.target.value }), onEdArtist: e => setEd({ artist: e.target.value }), onEdGoal: e => setEd({ goal: e.target.value }),
+      onEdSteps: e => setEd({ stepsText: e.target.value }), onEdWords: e => setEd({ wordsText: e.target.value }), onEdLyrics: e => setEd({ lyrics: e.target.value }),
+      edSrcOpts: [['cancionero', 'Cancionero'], ['otra', 'Otra fuente']].map(([k, l]) => ({ label: l, ...(ed && ed.src === k ? ON : OFF), onClick: () => setEd({ src: k }) })),
+      edAges: D.AGES.map((a, i) => ({ label: a.label, ...(ed && ed.ages.includes(i) ? ON : OFF), onClick: () => togg('ages', i) })),
+      edPurposes: D.PURPOSES.map(p => ({ label: p.label, icon: p.icon, ...(ed && ed.purposes.includes(p.label) ? ON : OFF), onClick: () => togg('purposes', p.label) })),
+      edMoments: D.MOMENTS.map(m => ({ label: m.label, icon: m.icon, ...(ed && ed.moments.includes(m.key) ? ON : OFF), onClick: () => togg('moments', m.key) })),
+      edStrats: D.STRATEGIES.map(s => ({ label: s.title, ...(ed && ed.strat === s.n ? ON : OFF), onClick: () => setEd({ strat: s.n }) })),
+      hasEdAudio: !!(ed && ed.audioUrl && st.edSrc), edSrc: st.edSrc, edDur: ed && ed.dur ? 'Duración ' + fmtDur(ed.dur) : (ed && !ed.audioUrl ? 'Sin audio todavía' : ''),
+      isFolder: folder, isUpload: !folder, edFile: (ed && ed.fileName) || '',
+      onEdFile: e => setEd({ fileName: e.target.value }),
+      checkFile: () => {
+        let name = ((ed && ed.fileName) || '').trim().replace(/^\/+/, '').replace(/^audio\//, '');
+        if (!name) return this.setState({ edErr: 'Escribe el nombre del archivo, por ejemplo pin-pon.mp3.' });
+        if (!/\.mp3$/i.test(name)) name += '.mp3';
+        const path = 'audio/' + name, a = new Audio();
+        a.preload = 'metadata';
+        a.onloadedmetadata = () => this.setState({ ed: { ...this.state.ed, fileName: name, audioUrl: path, audioPath: '', dur: Math.round(a.duration) || 0, title: this.state.ed.title || name.replace(/\.mp3$/i, '').replace(/-/g, ' ') }, edSrc: path, edErr: '' });
+        a.onerror = () => this.setState({ ed: { ...this.state.ed, audioUrl: '', dur: 0 }, edSrc: '', edErr: 'No se encontró «' + path + '». Revisa el nombre exacto (mayúsculas incluidas) y que el archivo ya esté publicado en la carpeta audio del sitio.' });
+        a.src = path;
+      },
+      upLabel: st.upPct != null ? `Subiendo… ${st.upPct}%` : (ed && ed.audioUrl ? 'Reemplazar MP3' : 'Subir MP3'),
+      onFile: async e => {
+        const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
+        if (!/^audio\//.test(file.type) && !/\.mp3$/i.test(file.name)) return this.setState({ edErr: 'El archivo debe ser de audio (MP3).' });
+        if (file.size > 20 * 1024 * 1024) return this.setState({ edErr: 'El archivo pesa más de 20 MB. Expórtalo en MP3 a 128 kbps.' });
+        const dur = await audioDur(file); this.setState({ upPct: 0, edErr: '' });
+        try {
+          const cur = this.state.ed, r = await B.uploadAudio(cur.id, file, p => this.setState({ upPct: p }));
+          if (cur.audioPath && cur.audioPath !== r.path) B.deleteAudio(cur.audioPath).catch(() => {});
+          this.setState({ ed: { ...this.state.ed, audioUrl: r.url, audioPath: r.path, dur, title: this.state.ed.title || file.name.replace(/\.[^.]+$/, '') }, edSrc: await B.resolveAudio(r.url), upPct: null });
+        } catch (err) { this.setState({ upPct: null, edErr: 'No se pudo subir: ' + B.msg(err) }); }
+      },
+      rightsIcon: ed && ed.rights ? 'ph-fill ph-check-square' : 'ph ph-square', toggleRights: () => setEd({ rights: !ed.rights }),
+      pubIcon: ed && ed.published ? 'ph-fill ph-check-square' : 'ph ph-square', togglePub: () => setEd({ published: !ed.published }),
+      edMissing: missing.length ? 'Para publicar falta: ' + missing.join(', ') + '.' : 'Lista para publicar.', edErr: st.edErr,
+      saveEd: async () => {
+        if (!ed.title.trim()) return this.setState({ edErr: 'Escribe el título.' });
+        if (ed.published && missing.length) return this.setState({ edErr: 'No se puede publicar todavía. Falta: ' + missing.join(', ') + '.' });
+        const song = { id: ed.id, title: ed.title.trim(), artist: ed.artist.trim(), src: ed.src, ages: ed.ages.slice().sort((a, b) => a - b), purposes: ed.purposes, moments: ed.moments, goal: ed.goal.trim(),
+          steps: ed.stepsText.split('\n').map(x => x.trim()).filter(Boolean), words: ed.wordsText.split(',').map(x => x.trim()).filter(Boolean), strat: ed.strat, lyrics: ed.lyrics,
+          audioUrl: ed.audioUrl, audioPath: ed.audioPath, dur: ed.dur, published: ed.published, rights: ed.rights, updated: Date.now() };
+        try { await B.saveSong(song); await reloadSongs(); this.setState({ ed: null }); } catch (e) { this.setState({ edErr: 'No se pudo guardar: ' + B.msg(e) }); }
+      },
+      closeEd: () => this.setState({ ed: null }), stop: e => e.stopPropagation(),
+      delLabel: st.confirmDel ? 'Toca de nuevo para eliminar' : 'Eliminar canción',
+      delEd: async () => {
+        if (!st.songs.some(s => s.id === ed.id)) { if (ed.audioPath) B.deleteAudio(ed.audioPath).catch(() => {}); return this.setState({ ed: null }); }
+        if (!st.confirmDel) return this.setState({ confirmDel: true });
+        try { await B.deleteSong(ed); await reloadSongs(); this.setState({ ed: null, confirmDel: false }); } catch (e) { this.setState({ edErr: B.msg(e) }); }
+      },
+      exportCsv: () => csvDl([['fecha', 'familia', 'evento', 'edad', 'cancion', 'momento', 'segundos', 'palabra']].concat(st.ev.map(e => [new Date(e.t).toISOString(), e.fam, e.type, e.kidAge != null ? D.AGES[e.kidAge].short : '', e.song, e.moment, e.sec, e.word])), 'cantito-uso.csv'),
+      exportSurveys: () => {
+        const qs = D.SURVEY.final, rows = [['familia', 'nino', 'edad', 'cuestionario', 'fecha', ...qs.map(q => q.id)]];
+        st.fams.forEach(f => (f.kids || []).forEach(k => ['inicial', 'final'].forEach(kind => { const s = k.surveys && k.surveys[kind]; if (s) rows.push([f.id, k.name, D.AGES[k.age].short, kind, new Date(s.t).toISOString(), ...qs.map(q => s.a[q.id])]); })));
+        csvDl(rows, 'cantito-cuestionarios.csv');
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
