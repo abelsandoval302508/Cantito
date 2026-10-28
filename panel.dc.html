@@ -216,7 +216,7 @@
         </div>
         <sc-if value="{{ songsEmpty }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:18px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
-            <span style="font-size:14px;color:var(--color-neutral-300);max-width:560px;text-wrap:pretty">Aún no hay canciones. Puedes importar las del cancionero y la lista base ya caracterizadas, como borradores sin audio, y luego subir el MP3 de cada una.</span>
+            <span style="font-size:14px;color:var(--color-neutral-300);max-width:560px;text-wrap:pretty">El cancionero aún no está guardado en la base de datos. Impórtalo para que las familias vean las canciones y puedas editarlas.</span>
             <button class="btn btn-secondary" onClick="{{ importBase }}" style="height:36px">{{ importLabel }}</button>
           </div>
         </sc-if>
@@ -322,9 +322,9 @@ class Component extends DCLogic {
   }
   load() {
     this.setState({ phase: 'loading' });
-    Promise.all([this.B.adminLoad(), this.B.listSongs(true)]).then(([d, songs]) => {
+    Promise.all([this.B.adminLoad(), this.B.listSongs(true), this.B.songsInitialized()]).then(([d, songs, inited]) => {
       const demo = this.B.mode === 'local' && !d.families.length;
-      this.setState({ phase: 'ready', fams: d.families, ev: d.events, songs, demo: this.state.phase === 'ready' ? this.state.demo : demo });
+      this.setState({ phase: 'ready', fams: d.families, ev: d.events, songs, inited, demo: this.state.phase === 'ready' ? this.state.demo : demo });
     }).catch(e => this.setState({ phase: 'login', err: 'No se pudieron leer los datos. Revisa las reglas de Firestore y que tu correo esté en la lista de administradores.' }));
   }
   seed() {
@@ -477,7 +477,7 @@ class Component extends DCLogic {
       songRows: shown.map(s => ({ title: s.title || '(sin título)', meta: [s.artist || (s.src === 'cancionero' ? 'Cancionero' : ''), fmtDur(s.dur), (s.ages || []).map(a => D.AGES[a].short).join(' · '), (s.moments || []).map(m => (D.MOMENTS.find(x => x.key === m) || {}).label).join(', ')].filter(Boolean).join(' · '),
         tags: (s.purposes || []).slice(0, 3), status: stOf(s)[0].toUpperCase() + stOf(s).slice(1), tagClass: stOf(s) === 'publicada' ? 'tag-accent' : stOf(s) === 'borrador' ? 'tag-outline' : 'tag-neutral',
         icon: s.audioUrl ? 'ph-waveform' : 'ph-file-dashed', onEdit: () => openEd(s) })),
-      noSongRows: !shown.length && songs.length > 0, songsEmpty: !songs.length,
+      noSongRows: !shown.length && songs.length > 0, songsEmpty: !st.inited,
       songCounts: [{ text: `${cnt('publicada')} publicadas`, cls: 'tag-accent' }, { text: `${cnt('borrador')} borradores`, cls: 'tag-outline' }, { text: `${cnt('sin audio')} sin audio`, cls: 'tag-neutral' }, { text: `${songs.length} en total · meta 50`, cls: 'tag-neutral' }],
       q: st.q, onQ: e => this.setState({ q: e.target.value }),
       filts: [['todas', 'Todas'], ['publicada', 'Publicadas'], ['borrador', 'Borradores'], ['sin audio', 'Sin audio']].map(([k, l]) => ({ label: l, ...SEGc(st.filt === k), onClick: () => this.setState({ filt: k }) })),
@@ -485,7 +485,7 @@ class Component extends DCLogic {
       importLabel: st.busy ? 'Importando…' : `Importar ${(window.CANTITO_SEED || []).length} canciones del cancionero`,
       importBase: async () => {
         if (st.busy) return; this.setState({ busy: true });
-        try { for (const s of (window.CANTITO_SEED || [])) { if (st.songs.some(x => x.id === s.id)) continue; await B.saveSong({ id: s.id, title: s.title, artist: '', src: s.src, ages: s.ages, purposes: s.purposes, moments: s.moments, goal: s.goal, steps: s.steps, words: s.words, strat: s.strat, lyrics: '', audioUrl: '', audioPath: '', dur: 0, published: false, rights: false, updated: Date.now() }); } await reloadSongs(); }
+        try { await B.ensureSeeded(); this.setState({ inited: true }); for (const s of []) { await B.saveSong({ id: s.id, title: s.title, artist: '', src: s.src, ages: s.ages, purposes: s.purposes, moments: s.moments, goal: s.goal, steps: s.steps, words: s.words, strat: s.strat, lyrics: '', audioUrl: '', audioPath: '', dur: 0, published: false, rights: false, updated: Date.now() }); } await reloadSongs(); }
         catch (e) { alert('No se pudo importar: ' + B.msg(e)); }
         this.setState({ busy: false });
       },
