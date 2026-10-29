@@ -42,7 +42,7 @@
         <div style="display:flex;flex-direction:column;gap:14px">
           <div style="display:flex;align-items:center;gap:8px;color:var(--color-accent-300)"><i class="ph ph-music-notes-simple" style="font-size:24px"></i><span style="font-size:16px;font-weight:500;letter-spacing:.02em">Cantito</span></div>
           <h1 style="font-size:36px;margin:0;text-wrap:pretty">Canciones que ayudan a hablar</h1>
-          <p style="margin:0;color:var(--color-neutral-400);font-size:15px;text-wrap:pretty">Canciones infantiles elegidas según la edad de tu hijo, lo que quieres estimular y el momento del día. Basado en el taller «Construyendo la comunicación».</p>
+          <p style="margin:0;color:var(--color-neutral-400);font-size:15px;text-wrap:pretty">Canciones infantiles elegidas según la edad de tu hijo, lo que quieres estimular y el momento del día. Basado en el taller «El poder de conectar, el arte de comunicar».</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <button class="btn btn-primary btn-block" onClick="{{ goSignup }}" style="height:52px;font-size:16px">Crear cuenta</button>
@@ -659,7 +659,7 @@ class Component extends DCLogic {
       a.src = s.audioUrl.startsWith('idb:') ? await this.B.resolveAudio(s.audioUrl) : s.audioUrl;
       a.loop = this.state.loop;
       this.setState({ nowId: s.id, t: 0, dur: s.dur || 0 });
-      this.log('play', { song: s.id, moment: this.state.moment, purposes: s.purposes });
+      this.log('play', { song: s.id, moment: this._moment || this.state.moment, purposes: s.purposes });
       if ('mediaSession' in navigator && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: s.artist || 'Cantito', album: 'Cantito', artwork: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] });
     }
     a.play().catch(() => {});
@@ -720,7 +720,15 @@ class Component extends DCLogic {
     const kid = { ...kidRaw, ageLabel: D.AGES[kidRaw.age].label, hito: D.AGES[kidRaw.age].hito };
     const cat = this.catalog(), favs = fam.favs || [];
     const forAge = cat.filter(s => s.ages.includes(kid.age));
-    let sug = forAge.filter(s => s.moments.includes(st.moment));
+    // Solo se muestran los momentos y propósitos que tienen canciones para la edad del niño
+    const MOM = D.MOMENTS.filter(m => forAge.some(s => s.moments.includes(m.key)));
+    const PUR = D.PURPOSES.filter(p => forAge.some(s => s.purposes.includes(p.label)));
+    const moment = MOM.some(m => m.key === st.moment) ? st.moment : (MOM[0] || {}).key;
+    this._moment = moment;
+    const ageCat = st.fAge == null ? cat : cat.filter(s => s.ages.includes(st.fAge));
+    const exP = D.PURPOSES.filter(p => st.fP.includes(p.label) || ageCat.some(s => s.purposes.includes(p.label)));
+    const exM = D.MOMENTS.filter(m => st.fM.includes(m.key) || ageCat.some(s => s.moments.includes(m.key)));
+    let sug = forAge.filter(s => s.moments.includes(moment));
     const featured = sug[0] ? this.row(sug[0], favs) : null;
     const mLabel = k => (D.MOMENTS.find(m => m.key === k) || {}).label;
     const results = cat.filter(s => (st.fAge == null || s.ages.includes(st.fAge)) && (!st.fP.length || s.purposes.some(p => st.fP.includes(p))) && (!st.fM.length || s.moments.some(m => st.fM.includes(m))));
@@ -821,21 +829,21 @@ class Component extends DCLogic {
       manyKids: fam.kids.length > 1,
       kidChips: fam.kids.map((k, i) => ({ name: k.name, initial: k.name[0].toUpperCase(), age: D.AGES[k.age].label, ...(i === st.active ? ON : OFF), onClick: () => this.setState({ active: i, fAge: k.age }) })),
       goProfile: () => this.go('profile'), goHome: () => this.go('home'),
-      homeMoments: D.MOMENTS.map(m => ({ label: m.label, icon: m.icon, ...(st.moment === m.key ? ON : OFF), isNow: m.key === this.nowMoment, onClick: () => this.setState({ moment: m.key }) })),
+      homeMoments: MOM.map(m => ({ label: m.label, icon: m.icon, ...(moment === m.key ? ON : OFF), isNow: m.key === this.nowMoment, onClick: () => this.setState({ moment: m.key }) })),
       hasFeatured: !!featured, featured: featured || {}, noSongs: !cat.length,
-      momentEmpty: !!cat.length && !featured, momentEmptyText: `Aún no hay canciones con audio para «${mLabel(st.moment)}» a esta edad.`,
+      momentEmpty: !!cat.length && !featured, momentEmptyText: `Aún no hay canciones con audio para «${mLabel(moment)}» a esta edad.`,
       altMoment: (() => { const m = D.MOMENTS.find(m => forAge.some(s => s.moments.includes(m.key))); return m ? { label: 'Ver ' + m.label, onClick: () => this.setState({ moment: m.key }) } : { label: 'Explorar canciones', onClick: () => this.go('explore') }; })(),
-      featuredKicker: featured ? `${mLabel(st.moment)} · ${featured.purposes.slice(0, 2).join(', ')}` : '',
+      featuredKicker: featured ? `${mLabel(moment)} · ${featured.purposes.slice(0, 2).join(', ')}` : '',
       moreSongs: sug.slice(1, 4).map(s => this.row(s, favs)), hasMore: sug.length > 1,
       screenLabel: `${minToday} min`, screenPct: Math.min(100, minToday / 20 * 100) + '%', screenTip: 'Canta encima de la grabación y mírale a la cara: tu voz es la clave.',
-      purposeTiles: D.PURPOSES.map(p => { const n = forAge.filter(s => s.purposes.includes(p.label)).length;
+      purposeTiles: PUR.map(p => { const n = forAge.filter(s => s.purposes.includes(p.label)).length;
         return { label: p.label, icon: p.icon, count: n === 1 ? '1 canción' : `${n} canciones`, onClick: () => { this.log('purpose_open', { purpose: p.label }); this.setState({ fAge: kid.age, fP: [p.label], fM: [], screen: 'explore' }); } }; }),
       exploreAges: D.AGES.map((a, i) => ({ short: a.short, ...SEG(st.fAge === i), onClick: () => this.setState({ fAge: st.fAge === i ? null : i }) })),
-      explorePurposes: D.PURPOSES.map(p => ({ label: p.label, icon: p.icon, ...(st.fP.includes(p.label) ? ON : OFF), onClick: () => this.toggleArr('fP', p.label) })),
-      exploreMoments: D.MOMENTS.map(m => ({ label: m.label, icon: m.icon, ...(st.fM.includes(m.key) ? ON : OFF), onClick: () => this.toggleArr('fM', m.key) })),
+      explorePurposes: exP.map(p => ({ label: p.label, icon: p.icon, ...(st.fP.includes(p.label) ? ON : OFF), onClick: () => this.toggleArr('fP', p.label) })),
+      exploreMoments: exM.map(m => ({ label: m.label, icon: m.icon, ...(st.fM.includes(m.key) ? ON : OFF), onClick: () => this.toggleArr('fM', m.key) })),
       clearFilters: () => this.setState({ fAge: null, fP: [], fM: [] }),
       results: results.map(s => this.row(s, favs)), noResults: !results.length, resultsLabel: results.length === 1 ? '1 canción' : `${results.length} canciones`,
-      routine: D.MOMENTS.map(m => { const list = forAge.filter(s => s.moments.includes(m.key)).sort((a, b) => favs.includes(b.id) - favs.includes(a.id) || !!b.yt - !!a.yt);
+      routine: MOM.map(m => { const list = forAge.filter(s => s.moments.includes(m.key)).sort((a, b) => favs.includes(b.id) - favs.includes(a.id) || !!b.yt - !!a.yt);
         return { label: m.label, icon: m.icon, hint: m.hint || (list.length ? '' : 'Sin canciones para esta edad'), ring: m.key === this.nowMoment ? 'var(--color-accent)' : 'var(--color-neutral-800)', songs: list.slice(0, 2).map(s => this.row(s, favs)) }; }),
       wordCount: kidWords.length, newWord: st.newWord,
       onNewWord: e => this.setState({ newWord: e.target.value }),

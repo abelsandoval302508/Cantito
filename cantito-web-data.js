@@ -1,5 +1,5 @@
 (function(){
-// Catálogo y contenido del taller «Construyendo la comunicación» (Versania Nova). Compartido por la app y el panel.
+// Catálogo y contenido del taller «El poder de conectar, el arte de comunicar» (Versania Nova). Compartido por la app y el panel.
 const AGES = [
   { label: '0–6 meses', short: '0–6 m', hito: 'Llanto, sonidos y sonrisa refleja, sonrisa social, risa a carcajadas, fija mirada, seguimiento visual, permanencia del objeto, balbuceo, reconocimiento de voces familiares, ubicación de fuente sonora, gestos agrado vs. desagrado.' },
   { label: '6–12 meses', short: '6–12 m', hito: 'Silabeo, aparición de primeras palabras, incremento en el uso de gestos, señala y comprende más vocabulario, tiene juguete favorito, aumenta su independencia y curiosidad.' },
@@ -22,7 +22,7 @@ const MOMENTS = [
   { key: 'Despertar', label: 'Al despertar', icon: 'ph-sun-horizon', hint: '' },
   { key: 'Comidas', label: 'Comidas', icon: 'ph-fork-knife', hint: 'Amamantamiento / hora de comidas' },
   { key: 'Higiene', label: 'Baño y vestido', icon: 'ph-bathtub', hint: 'Cambio de pañal, baño, cepillado de dientes, vestido' },
-  { key: 'Juego', label: 'Juego y cuentos', icon: 'ph-puzzle-piece', hint: 'Hora de juego diario y lectura de cuentos e historias' },
+  { key: 'Juego', label: 'Juego', icon: 'ph-puzzle-piece', hint: 'Hora de juego diario' },
   { key: 'Salidas', label: 'Salidas', icon: 'ph-tree', hint: 'Ir al supermercado, parque, médico, zoológico, etc.' },
   { key: 'Dormir', label: 'Dormir', icon: 'ph-moon-stars', hint: '' },
 ];
