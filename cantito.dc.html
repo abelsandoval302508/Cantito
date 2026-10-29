@@ -588,7 +588,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 const DAY = 864e5;
-const momentForHour = h => h < 5 ? 'Dormir' : h < 9 ? 'Despertar' : h < 11 ? 'Juego' : h < 14 ? 'Comidas' : h < 17 ? 'Salidas' : h < 19 ? 'Juego' : h < 20 ? 'Higiene' : 'Dormir';
+const momentForHour = h => h < 5 ? 'Higiene' : h < 9 ? 'Despertar' : h < 11 ? 'Juego' : h < 14 ? 'Comidas' : h < 18 ? 'Juego' : h < 19 ? 'Comidas' : 'Higiene';
 const ON = { bg: 'var(--color-accent-900)', bd: 'var(--color-accent)', fg: 'var(--color-accent-200)' };
 const OFF = { bg: 'var(--color-surface)', bd: 'var(--color-neutral-800)', fg: 'var(--color-neutral-300)' };
 const SEG = on => ({ bg: on ? 'var(--color-accent-900)' : 'var(--color-surface)', fg: on ? 'var(--color-accent-200)' : 'var(--color-neutral-400)', bd: on ? 'var(--color-accent)' : 'transparent' });

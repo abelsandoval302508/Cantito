@@ -90,6 +90,9 @@
         out = []; snap.forEach(d => out.push(d.data()));
         if (!out.length && !(await api.songsInitialized())) out = seed;
       }
+      // Solo se conservan los momentos del día vigentes (Despertar, Comidas, Higiene, Juego)
+      const keys = ((window.CantitoData || {}).MOMENTS || []).map(m => m.key);
+      if (keys.length) out = out.map(x => ({ ...x, moments: (x.moments || []).filter(k => keys.includes(k)) }));
       return all ? out : out.filter(x => x.published && x.audioUrl);
     },
     async songsInitialized() {

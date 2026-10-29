@@ -23,8 +23,6 @@ const MOMENTS = [
   { key: 'Comidas', label: 'Comidas', icon: 'ph-fork-knife', hint: 'Amamantamiento / hora de comidas' },
   { key: 'Higiene', label: 'Baño y vestido', icon: 'ph-bathtub', hint: 'Cambio de pañal, baño, cepillado de dientes, vestido' },
   { key: 'Juego', label: 'Juego', icon: 'ph-puzzle-piece', hint: 'Hora de juego diario' },
-  { key: 'Salidas', label: 'Salidas', icon: 'ph-tree', hint: 'Ir al supermercado, parque, médico, zoológico, etc.' },
-  { key: 'Dormir', label: 'Dormir', icon: 'ph-moon-stars', hint: '' },
 ];
 const STRATEGIES = [
   { n: 1, title: 'Organización del ambiente', points: ['Hable del horario del día con los niños.', 'Acompañe con canciones mientras ejecuta las actividades y en las transiciones: cambio de pañal, guardar, etc.', 'Hora del cuento diaria – lectura compartida.', 'Limite los tiempos de pantalla. Promueva el diálogo en actividad conjunta con el niño.'] },
@@ -120,5 +118,6 @@ const SURVEY = {
     { id: 'utilidad', short: 'Utilidad de Cantito', q: '¿Qué tan útil ha sido Cantito para tu familia?', type: 'scale', hint: '1 = nada · 5 = mucho' },
     { id: 'cambios', short: 'Cambios observados', q: '¿Notaste algún cambio en su comunicación? Cuéntanos.', type: 'text' }],
 };
+SONGS.forEach(s => { s.moments = (s.moments || []).filter(k => MOMENTS.some(m => m.key === k)); });
 window.CantitoData = { AGES, PURPOSES, MOMENTS, STRATEGIES, SCREEN_TIP, SONGS, SURVEY, catalog, ytId };
 })();
